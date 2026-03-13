@@ -26,7 +26,7 @@ const appName = "LuckyDrops";
 
 // Regex para capturar drops
 const ringRegexes = {
-    lotd: /\[\d{2}:\d{2}:\d{2}\] Your Luck of the Dwarves shines brightly and you receive: (\d+) x (.+)/,
+    lotd: /\[\d{2}:\d{2}:\d{2}\] Your Luck of the Dwarves ring shines brightly\. You receive: (\d+) x (.+)/,
     hazelmereNormal: /\[\d{2}:\d{2}:\d{2}\] Your Hazelmere's signet ring shines brightly\. You receive: (\d+) x (.+)/,
     hazelmereDouble: /\[\d{2}:\d{2}:\d{2}\] The power of Hazelmere blesses your drop and doubles it before your very eyes: (\d+) x (.+)/
 };

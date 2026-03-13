@@ -1,5 +1,6 @@
 const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin"); // NOVO
 
 module.exports = {
     context: path.resolve(__dirname, "src"),
@@ -8,6 +9,7 @@ module.exports = {
     },
     output: {
         path: path.resolve(__dirname, "dist"),
+        filename: "[name].js",  // Garante que o nome seja main.js
         library: { type: "umd", name: "LuckyDrops" }
     },
     devtool: false,
@@ -16,12 +18,14 @@ module.exports = {
     resolve: {
         extensions: [".wasm", ".tsx", ".ts", ".mjs", ".jsx", ".js"]
     },
-    ignoreWarnings: [
-        { message: /TS2307/ },
-        { message: /ts-loader/ },
-        { message: /css/ }  // Ignorar warnings relacionados a CSS
-    ],
     plugins: [
+        // NOVO: Processa o HTML e injeta o script automaticamente
+        new HtmlWebpackPlugin({
+            template: "./index.html",  // Arquivo fonte em src/
+            filename: "index.html",     // Será gerado em dist/
+            inject: "body",             // Coloca o script no body
+            scriptLoading: "blocking"   // Carregamento tradicional
+        }),
         new CopyWebpackPlugin({
             patterns: [
                 { from: "css/style.css", to: "css/style.css" }
@@ -34,11 +38,7 @@ module.exports = {
                 test: /\.tsx?$/, 
                 loader: "ts-loader",
                 options: {
-                    transpileOnly: true,
-                    happyPackMode: true,
-                    compilerOptions: {
-                        types: []  // Não carregar tipos
-                    }
+                    transpileOnly: true
                 }
             },
             { 
@@ -46,13 +46,7 @@ module.exports = {
                 type: "asset/resource", 
                 generator: { filename: "assets/[name][ext]" } 
             },
-            { 
-                test: /\.(html|json)$/, 
-                type: "asset/resource", 
-                generator: { filename: "[base]" } 
-            },
-            { test: /\.data\.png$/, loader: "alt1/imagedata-loader", type: "javascript/auto" },
-            { test: /\.fontmeta.json/, loader: "alt1/font-loader" }
+           
         ]
     },
     devServer: {

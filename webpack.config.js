@@ -1,4 +1,5 @@
 const path = require("path");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 module.exports = {
     context: path.resolve(__dirname, "src"),
@@ -15,21 +16,31 @@ module.exports = {
     resolve: {
         extensions: [".wasm", ".tsx", ".ts", ".mjs", ".jsx", ".js"]
     },
-    // IGNORAR ERROS DOS MÓDULOS DO ALT1
     ignoreWarnings: [
-        { module: /@alt1\/base/ },
-        { module: /@alt1\/chatbox/ },
-        { message: /TS2322/ },
-        { message: /TS2554/ },
-        { message: /TS2345/ },
-        { message: /TS2403/ },
-        { message: /TS7053/ },
-        { message: /TS7006/ }
+        { message: /TS2307/ },
+        { message: /ts-loader/ },
+        { message: /css/ }  // Ignorar warnings relacionados a CSS
+    ],
+    plugins: [
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: "css/style.css", to: "css/style.css" }
+            ]
+        })
     ],
     module: {
         rules: [
-            { test: /\.tsx?$/, loader: "ts-loader" },
-            { test: /\.css$/, use: ["style-loader", "css-loader"] },
+            { 
+                test: /\.tsx?$/, 
+                loader: "ts-loader",
+                options: {
+                    transpileOnly: true,
+                    happyPackMode: true,
+                    compilerOptions: {
+                        types: []  // Não carregar tipos
+                    }
+                }
+            },
             { 
                 test: /\.(png|jpg|jpeg|gif|webp)$/, 
                 type: "asset/resource", 

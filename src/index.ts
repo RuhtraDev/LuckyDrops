@@ -1,9 +1,8 @@
-import * as a1lib from "@alt1/base";
-import ChatboxReader from "@alt1/chatbox";
+import * as a1lib from "alt1";
+import ChatboxReader from "alt1/chatbox";
 
 import "./index.html";
 import "./appconfig.json";
-import "./css/style.css";
 import "./icon.png";
 
 declare global {
@@ -12,7 +11,7 @@ declare global {
   }
 }
 
-// ===== VARIÁVEIS GLOBAIS =====
+// Elementos DOM
 const itemList = document.querySelector(".itemList") as HTMLElement;
 const chatSelector = document.querySelector(".chat") as HTMLSelectElement;
 const exportButton = document.querySelector(".export") as HTMLElement;
@@ -25,12 +24,14 @@ const timestampRegex = /\[\d{2}:\d{2}:\d{2}\]/g;
 const reader = new ChatboxReader();
 const appName = "LuckyDrops";
 
+// Regex para capturar drops
 const ringRegexes = {
     lotd: /\[\d{2}:\d{2}:\d{2}\] Your Luck of the Dwarves shines brightly and you receive: (\d+) x (.+)/,
     hazelmereNormal: /\[\d{2}:\d{2}:\d{2}\] Your Hazelmere's signet ring shines brightly\. You receive: (\d+) x (.+)/,
     hazelmereDouble: /\[\d{2}:\d{2}:\d{2}\] The power of Hazelmere blesses your drop and doubles it before your very eyes: (\d+) x (.+)/
 };
 
+// Configurar cores do chat
 reader.readargs = {
     colors: [
         a1lib.mixColor(245, 124, 1),
@@ -38,8 +39,15 @@ reader.readargs = {
     ],
 };
 
-// ===== FUNÇÕES AUXILIARES (DEFINIDAS ANTES DE SEREM USADAS) =====
+// Verificar se está no Alt1
+if (window.alt1) {
+    window.alt1.identifyAppUrl("./appconfig.json");
+} else {
+    let addappurl = `alt1://addapp/${new URL("./appconfig.json", document.location.href).href}`;
+    itemList.innerHTML = `<li>Alt1 not detected, click <a href='${addappurl}'>here</a> to add this app to Alt1</li>`;
+}
 
+// Funções auxiliares
 function showSelectedChat(chat: any) {
     if (!chat?.mainbox?.rect) return;
     try {
@@ -220,16 +228,7 @@ function checkAnnounce(dropItem: any) {
     }
 }
 
-// ===== INICIALIZAÇÃO (AGORA COM TODAS AS FUNÇÕES DEFINIDAS) =====
-
-if (window.alt1) {
-    window.alt1.identifyAppUrl("./appconfig.json");
-} else {
-    let addappurl = `alt1://addapp/${new URL("./appconfig.json", document.location.href).href}`;
-    itemList.innerHTML = `<li>Alt1 not detected, click <a href='${addappurl}'>here</a> to add this app to Alt1</li>`;
-}
-
-
+// Inicialização
 window.setTimeout(function () {
     let findChat = setInterval(function () {
         if (reader.pos === null) {
@@ -237,7 +236,6 @@ window.setTimeout(function () {
         } else {
             clearInterval(findChat);
             
-            // VERIFICAÇÃO: reader.pos não é null aqui (estamos no else)
             if (reader.pos && reader.pos.boxes) {
                 reader.pos.boxes.forEach((box: any, i: number) => {
                     chatSelector.insertAdjacentHTML("beforeend", `<option value="${i}">Chat ${i}</option>`);
@@ -273,9 +271,7 @@ window.setTimeout(function () {
     }, 1000);
 }, 50);
 
-
-// ===== EVENT LISTENERS =====
-
+// Event Listeners
 exportButton.addEventListener("click", function () {
     const data = getSaveData("data") || [];
     const mode = getSaveData("mode");
@@ -333,7 +329,7 @@ listHeader.addEventListener("click", function () {
     showItems();
 });
 
-// ===== INICIALIZAÇÃO DE DADOS =====
+// Inicialização de dados
 (function init() {
     if (!localStorage.getItem(appName)) {
         localStorage.setItem(appName, JSON.stringify({

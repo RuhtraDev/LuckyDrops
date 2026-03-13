@@ -1,8 +1,4 @@
-/* ===== ESTILOS BASE ===== */
-.row {
-    text-align: center;
-}
-
+/* ===== BASE ===== */
 body {
     margin-top: 10px !important;
     background-color: #1a1a1a;
@@ -15,53 +11,24 @@ body.nis {
     overflow-x: hidden !important;
 }
 
-/* ===== TAMANHOS MÍNIMOS ===== */
-.itemList {
-    min-width: 250px !important;
-}
-
-.modal-dialog {
-    min-width: 250px !important;
-    margin: 10px !important;
-}
-
-.nisbutton {
-    min-width: 80px !important;
-    font-size: 8pt !important;
-    white-space: nowrap !important;
-}
-
-/* ===== ITENS DA LISTA ===== */
+/* ===== ITEMS LIST ===== */
 .list-group-item {
     background: transparent;
     border: grey solid 1px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     padding: .5rem .75rem;
-    text-align: left;
     color: white;
-    transition: background-color 0.2s;
-    min-width: 230px !important;
-    word-wrap: break-word !important;
+    transition: 0.2s;
 }
 
 .list-group-item:hover {
-    background-color: #333333;
+    background-color: #333;
     border-color: #ffd700;
-}
-
-.list-group-item.lotd {
-    border-left: 4px solid #f57c01;
-}
-
-.list-group-item.hazelmere {
-    border-left: 4px solid #ffd700;
 }
 
 .list-group {
     height: calc(100vh - 4.25em);
     overflow-y: scroll;
-    padding-top: 20px;
+    margin-bottom: 60px;
 }
 
 .list-group::-webkit-scrollbar {
@@ -71,10 +38,10 @@ body.nis {
 /* ===== HEADER ===== */
 .header {
     text-align: center;
-    background: url(https://runeapps.org/nis/alt1-currentskin/nisbutton.png) 0px -100%/24px 400% repeat content-box;
+    background: url(https://runeapps.org/nis/alt1-currentskin/nisbutton.png) 0px -100%/24px 400% repeat;
     background-color: black;
     color: #422d00;
-    font-family: 'trajan-pro-3', 'Arial', sans-serif;
+    font-family: 'trajan-pro-3';
     font-size: 1.2em;
     padding: 10px 0;
     position: fixed;
@@ -83,180 +50,101 @@ body.nis {
     z-index: 1;
     cursor: pointer;
     border: 2px solid #f57c01;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
 
 .header:hover {
-    color: #ffffff;
-    border-bottom-color: #745900;
+    color: white;
+    border-color: #ffd700;
 }
 
 /* ===== TOTAL ===== */
 .total {
     text-align: center;
-    color: rgb(255, 213, 27);
+    color: #ffd51b;
     font-weight: bold;
     font-size: 1.5em;
-    margin-top: 25px;
+    margin-top: 60px;
     padding: 15px;
 }
 
-/* ===== RING ICONS ===== */
-.ring-icon {
-    display: inline-block;
-    width: 20px;
-    margin-right: 8px;
-    font-size: 1.2em;
-    min-width: 20px !important;
-}
-
-.lotd-color {
-    color: #f57c01;
-    font-weight: bold;
-    font-size: 1.2em;
-    margin-right: 5px;
-}
-
-.hazelmere-color {
-    color: #ffd700;
-    font-weight: bold;
-    font-size: 1.2em;
-    margin-right: 5px;
-}
+/* ===== RING COLORS ===== */
+.lotd-color { color: #f57c01; font-weight: bold; }
+.hazelmere-color { color: #ffd700; font-weight: bold; }
 
 /* ===== MODAL ===== */
-.modal-body,
-.modal-header,
-.modal-footer {
+.modal-content {
+    border: 2px solid #ffd700;
     background-image: url('https://runeapps.org/nis/alt1-currentskin/background.png') !important;
     background-blend-mode: overlay !important;
-    background-color: #777777;
-    color: white;
-    border: 2px solid #ffd700;
+    background-color: #2a2a2a !important;
 }
 
-/* ===== LEGEND CONTAINER ===== */
+.modal-header {
+    border-bottom: 2px solid #f57c01;
+}
+
+.modal-footer {
+    border-top: 2px solid #f57c01;
+}
+
+/* ===== BUTTONS ===== */
+.nisbutton {
+    display: inline-block;
+    padding: 8px 16px !important;
+    border: 2px solid #8a6d3b !important;
+    border-radius: 4px !important;
+    background: url(https://runeapps.org/nis/alt1-currentskin/nisbutton.png) 0px -100%/24px 400% repeat !important;
+    color: #ffed84 !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    transition: 0.2s !important;
+}
+
+.nisbutton:hover {
+    border-color: #ffd700 !important;
+    color: white !important;
+    transform: translateY(-1px);
+}
+
+.nisbutton.w-100 { width: 100% !important; }
+
+/* ===== CHAT SELECTOR ===== */
+.chat-selector {
+    background: #2a2a2a;
+    color: white;
+    border: 2px solid #444;
+    border-radius: 4px;
+    padding: 8px;
+    width: 100%;
+}
+
+.chat-selector:hover { border-color: #ffd700; }
+
+/* ===== TOTALS CONTAINER ===== */
+.totals-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    background: #1a1a1a;
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.totals-label { color: #ffd700; font-weight: bold; }
+.totals-value { color: #00ffff; font-weight: bold; }
+
+/* ===== LEGEND ===== */
 .legend-container {
     display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
     gap: 30px;
+    justify-content: center;
     padding: 10px;
     background: #2a2a2a;
     border-radius: 4px;
     border: 1px solid #444;
 }
 
-/* ===== TEXT MUTED ===== */
-.text-muted {
-    color: #b4b4b4 !important;
-}
-
-/* ===== WARNING & DANGER ===== */
-.warning {
-    background-color: #ffaa00;
-    color: black;
-    font-weight: bold;
-}
-
-.danger {
-    background-color: #dc3545;
-    color: white;
-    font-weight: bold;
-}
-
-/* ===== CHAT SELECTOR ===== */
-.chat-selector {
-    background-color: #2a2a2a;
-    color: white;
-    border: 2px solid #444;
-    border-radius: 4px;
-    padding: 5px;
-    margin: 5px 0;
-    width: 100%;
-}
-
-.chat-selector:hover {
-    border-color: #ffd700;
-}
-
-/* ===== BUTTONS ===== */
-.button {
-    background-color: #ffd000;
-    color: white;
-    border: 2px solid #444;
-    border-radius: 4px;
-    padding: 8px 16px;
-    margin: 5px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: 'trajan-pro-3', 'Arial', sans-serif;
-}
-
-.button:hover {
-    border-color: #ffd700;
-    background-color: #3a3a3a;
-}
-
-.button.primary {
-    border-color: #f57c01;
-}
-
-.button.primary:hover {
-    background-color: #f57c01;
-    color: black;
-}
-
-/* ===== BTN CLOSE ===== */
-.btn-close {
-    filter: brightness(0) invert(1) !important;
-    opacity: 0.8 !important;
-    transition: all 0.2s ease !important;
-}
-
-.btn-close:hover {
-    opacity: 1 !important;
-    filter: brightness(0) invert(0.8) sepia(1) hue-rotate(50deg) !important;
-    transform: scale(1.2) !important;
-}
-
-/* ===== TOTALS CONTAINER ===== */
-.totals-container {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    background-color: #2a2a2a;
-    border: 2px solid #444;
-    border-radius: 4px;
-    margin: 10px 0;
-}
-
-.totals-label {
-    color: #ffd700;
-    font-weight: bold;
-}
-
-.totals-value {
-    color: #00ffff;
-    font-weight: bold;
-}
-
-/* ===== TOOLTIPS ===== */
-.item-tooltip {
-    background-color: #2a2a2a;
-    border: 2px solid #ffd700;
-    border-radius: 4px;
-    padding: 8px;
-    color: white;
-    font-size: 12px;
-    max-width: 300px;
-}
-
-.tooltip-ring {
-    display: inline-block;
-    margin-right: 5px;
-}
 /* ===== CUSTOM PHRASES ===== */
 .phrases-details {
     background: #2a2a2a;
@@ -269,11 +157,6 @@ body.nis {
     color: #ffd700;
     cursor: pointer;
     font-weight: bold;
-    padding: 5px;
-}
-
-.phrases-details summary:hover {
-    color: #f57c01;
 }
 
 .phrases-container {
@@ -287,55 +170,50 @@ body.nis {
     background: #333 !important;
     color: white !important;
     border: 1px solid #444 !important;
-    padding: 8px !important;
-    width: 100% !important;
-    border-radius: 4px !important;
     font-family: monospace !important;
 }
 
-.phrases-textarea:focus {
-    border-color: #ffd700 !important;
-    outline: none !important;
+/* ===== WEBHOOK ===== */
+.webhook-details {
+    background: #2a2a2a;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #444;
 }
 
-#savePhrases {
-    border-color: #00ffff !important;
+.webhook-details summary {
+    color: #ffd700;
+    cursor: pointer;
+    font-weight: bold;
 }
 
-#savePhrases:hover {
-    background-color: #00ffff !important;
-    color: black !important;
-}
-/* ===== ANIMAÇÕES ===== */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+/* ===== VERSION ===== */
+.version-row {
+    margin-top: 5px;
 }
 
-.fade-in {
-    animation: fadeIn 0.3s ease-in;
+.version-text {
+    color: #ffd700 !important;
+    opacity: 0.6;
+    font-size: 10px;
 }
 
-/* ===== MAIN ===== */
-.main {
-    overflow-y: scroll;
-    max-height: 75vh;
-    margin-top: 8px;
+#version-number {
+    color: #00ffff;
+    font-weight: bold;
 }
 
-/* ===== RESPONSIVIDADE ===== */
-@media (max-width: 600px) {
-    .header {
-        font-size: 14px;
-    }
-    
-    .list-group-item {
-        font-size: 12px;
-        padding: 4px 8px;
-    }
-    
-    .button {
-        padding: 6px 12px;
-        font-size: 12px;
-    }
+/* ===== TEXT MUTED ===== */
+.text-muted { color: #b4b4b4 !important; }
+
+/* ===== BTN CLOSE ===== */
+.btn-close {
+    filter: brightness(0) invert(1) !important;
+    opacity: 0.8 !important;
+}
+
+.btn-close:hover {
+    opacity: 1 !important;
+    filter: brightness(0) invert(0.8) sepia(1) hue-rotate(50deg) !important;
+    transform: scale(1.2) !important;
 }

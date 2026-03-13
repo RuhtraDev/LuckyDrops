@@ -1,87 +1,69 @@
+<!DOCTYPE html>
 <html>
-
 <head>
+    <meta charset="UTF-8">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css" />
+    <link rel="stylesheet" type="text/css" href="https://runeapps.org/nis/nis.css">
     <link rel="stylesheet" type="text/css" href="https://runeapps.org/runeappslib.css">
     <link rel="stylesheet" type="text/css" href="./css/style.css">
-    <title>Lucky Drops - LOTD & Hazelmere</title>
+    <title>Lucky Drops Tracker</title>
 </head>
-
 <body class="nis">
 
     <ul class="itemList list-group">
-        <li class="list-group-item header" data-show="history" title="Click to switch between History and Totals">Lucky Drops Tracker - Loading...</li>
-        <li class="list-group-item total">Total Drops Collected: <span id="total" style="font-weight:bold">0</span></li>
-        <li class='list-group-item item' style='word-wrap:break-word;white-space: normal'>
-            <span class="ring-icon">💎</span> If this message is showing for an extended period of time, then the chatbox reader for Alt1 isn't working due to an update. Please be patient, and the issue will be fixed as soon as it can!
-        </li>
+        <li class="list-group-item header" data-show="history" title="Click to switch">Lucky Drops Tracker</li>
+        <li class="list-group-item total">Total Drops: <span id="total">0</span></li>
+        <li class="list-group-item item loading">💎 Loading chat reader...</li>
     </ul>
+
     <div class="container">
         <div class="row fixed-bottom">
             <div class="col">
-                <div class="row">
-                    <div class="col">
-                        <button class="nisbutton w-100" data-bs-toggle="modal" data-bs-target="#settings" type="button">
-                            ⚙️ Settings
-                        </button>
-                    </div>
-                </div>
-                <!-- LINHA DA VERSÃO - CORRIGIDA -->
+                <button class="nisbutton w-100" data-bs-toggle="modal" data-bs-target="#settings">⚙️ Settings</button>
                 <div class="row version-row">
                     <div class="col text-center">
-                        <small class="text-muted version-text">
-                            v <span id="version-number">1.0.1513</span>
-                        </small>
+                        <small class="text-muted version-text">v <span id="version-number">1.0.1622</span></small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    
 
-    <!-- Modal de Configurações -->
-    <div class="modal nis fade" tabindex="-1" role="dialog" id="settings">
-        <div class="modal-dialog modal-dialog-centered" role="document">
+    <!-- MODAL DE CONFIGURAÇÕES -->
+    <div class="modal nis fade" id="settings" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">⚙️ Lucky Drops Tracker Settings</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title">⚙️ Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-
+                
                 <div class="modal-body">
-                    <!-- Seletor de Chat -->
+                    <!-- Chat Selector -->
                     <div class="row mb-3">
                         <div class="col-6">
                             <h6>📝 Select Chat</h6>
-                            <small class="text-muted">Choose the chat with loot messages</small>
+                            <small class="text-muted">Choose loot chat</small>
                         </div>
                         <div class="col-6">
                             <select class="chat-selector chat">
-                                <option value="">Select a chat...</option>
+                                <option value="">Select...</option>
                             </select>
                         </div>
                     </div>
 
-                    <!-- Informações sobre os anéis -->
+                    <!-- Totals -->
                     <div class="row mb-3">
                         <div class="col-12">
                             <div class="totals-container">
-                                <div>
-                                    <span class="totals-label">💎 LOTD Drops:</span>
-                                    <span class="totals-value" id="lotdCount">0</span>
-                                </div>
-                                <div>
-                                    <span class="totals-label">👑 Hazelmere Drops:</span>
-                                    <span class="totals-value" id="hazelmereCount">0</span>
-                                </div>
+                                <div><span class="totals-label">💎 LOTD:</span> <span class="totals-value" id="lotdCount">0</span></div>
+                                <div><span class="totals-label">👑 HSR:</span> <span class="totals-value" id="hazelmereCount">0</span></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Legenda das cores -->
+                    <!-- Color Legend -->
                     <div class="row mb-3">
                         <div class="col-12">
                             <div class="legend-container">
@@ -91,11 +73,10 @@
                         </div>
                     </div>
 
-                    <!-- Exportação CSV -->
+                    <!-- Export CSV -->
                     <div class="row mb-3">
                         <div class="col-12">
                             <button class="nisbutton w-100 export">📥 CSV Export</button>
-                            <small class="text-muted d-block text-center mt-1">Exports based on current view (History or Totals)</small>
                         </div>
                     </div>
 
@@ -103,25 +84,25 @@
                     <div class="row mb-3">
                         <div class="col-12">
                             <details class="webhook-details">
-                                <summary>🔔 Discord Webhook (Optional)</summary>
-                                <div class="webhook-input-container">
-                                    <input type="url" class="form-control" id="discordWebhook" placeholder="Enter Discord webhook URL">
-                                    <small class="text-muted d-block mt-1">Get webhook URL from Discord channel settings</small>
+                                <summary>🔔 Discord Webhook</summary>
+                                <div class="mt-2">
+                                    <input type="url" class="form-control" id="discordWebhook" placeholder="Discord webhook URL">
                                 </div>
                             </details>
                         </div>
                     </div>
+
+                    <!-- Custom Phrases -->
                     <div class="row mb-3">
                         <div class="col-12">
                             <details class="phrases-details">
-                                <summary>📝 Custom Drop Phrases (Optional)</summary>
+                                <summary>📝 Custom Phrases</summary>
                                 <div class="phrases-container">
-                                    <small class="text-muted d-block mb-2">Add custom phrases for drops (one per line)</small>
-                                    <textarea class="form-control phrases-textarea" id="customPhrases" rows="4" placeholder="Your Luck of the Dwarves shines brightly and you receive:&#10;Your Hazelmere's signet ring shines brightly. You receive:&#10;The power of Hazelmere blesses your drop and doubles it:">Your Luck of the Dwarves shines brightly and you receive:
-                    Your Hazelmere's signet ring shines brightly. You receive:
-                    The power of Hazelmere blesses your drop and doubles it before your very eyes:</textarea>
-                                    <small class="text-muted d-block mt-1">Use (\\d+) for quantity and (.+) for item name</small>
-                                    <button class="nisbutton w-100 mt-2" id="savePhrases">💾 Save Custom Phrases</button>
+                                    <textarea class="form-control phrases-textarea" id="customPhrases" rows="5" placeholder="Your Luck of the Dwarves shines brightly and you receive: (\d+) x (.+)&#10;Your Hazelmere's signet ring shines brightly. You receive: (\d+) x (.+)">Your Luck of the Dwarves shines brightly and you receive: (\d+) x (.+)
+Your Hazelmere's signet ring shines brightly. You receive: (\d+) x (.+)
+The power of Hazelmere blesses your drop and doubles it before your very eyes: (\d+) x (.+)</textarea>
+                                    <small class="text-muted d-block mt-1">Use (\d+) for quantity, (.+) for item name</small>
+                                    <button class="nisbutton w-100 mt-2" id="savePhrases">💾 Save Phrases</button>
                                 </div>
                             </details>
                         </div>
@@ -130,20 +111,15 @@
                     <!-- Factory Reset -->
                     <div class="row">
                         <div class="col-12">
-                            <button class="nisbutton w-100" data-type="reset" data-bs-toggle="collapse" href="#resetApp">
-                                ⚠️ Factory Reset
-                            </button>
+                            <button class="nisbutton w-100" data-type="reset" data-bs-toggle="collapse" href="#resetApp">⚠️ Factory Reset</button>
                         </div>
                     </div>
-
-                    <!-- Confirmação de Reset -->
                     <div class="row collapse mt-3" id="resetApp">
                         <div class="col-12">
                             <div class="alert alert-danger p-3">
-                                <strong class="d-block mb-2">⚠️ WARNING!</strong>
-                                <p class="mb-3">This will remove ALL saved data. This action cannot be undone!</p>
+                                <p class="mb-2">Reset all data?</p>
                                 <div class="d-flex gap-2">
-                                    <button class="nisbutton flex-fill clear" data-type="reset" data-bs-toggle="collapse" href="#resetApp">✅ Yes</button>
+                                    <button class="nisbutton flex-fill clear" data-bs-toggle="collapse" href="#resetApp">✅ Yes</button>
                                     <button class="nisbutton flex-fill" data-bs-toggle="collapse" href="#resetApp">❌ No</button>
                                 </div>
                             </div>
@@ -152,9 +128,7 @@
                 </div>
 
                 <div class="modal-footer">
-                    <small class="text-muted">
-                        Based on <a href="https://zerogwafa.github.io/SerenTracker/index.html" target="_blank">SerenTracker</a> & <a href="https://zerogwafa.github.io/ComponentCounter/index.html" target="_blank">ComponentCounter</a> by ZeroGwafa
-                    </small>
+                    <small class="text-muted">Based on ZeroGwafa's work</small>
                 </div>
             </div>
         </div>

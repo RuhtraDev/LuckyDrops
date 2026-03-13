@@ -1,6 +1,6 @@
 const path = require("path");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
-const HtmlWebpackPlugin = require("html-webpack-plugin"); // NOVO
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
     context: path.resolve(__dirname, "src"),
@@ -9,7 +9,7 @@ module.exports = {
     },
     output: {
         path: path.resolve(__dirname, "dist"),
-        filename: "[name].js",  // Garante que o nome seja main.js
+        filename: "[name].js",
         library: { type: "umd", name: "LuckyDrops" }
     },
     devtool: false,
@@ -19,12 +19,11 @@ module.exports = {
         extensions: [".wasm", ".tsx", ".ts", ".mjs", ".jsx", ".js"]
     },
     plugins: [
-        // NOVO: Processa o HTML e injeta o script automaticamente
         new HtmlWebpackPlugin({
-            template: "./index.html",  // Arquivo fonte em src/
-            filename: "index.html",     // Será gerado em dist/
-            inject: "body",             // Coloca o script no body
-            scriptLoading: "blocking"   // Carregamento tradicional
+            template: "./index.html",
+            filename: "index.html",
+            inject: "body",
+            scriptLoading: "blocking"
         }),
         new CopyWebpackPlugin({
             patterns: [
@@ -45,8 +44,7 @@ module.exports = {
                 test: /\.(png|jpg|jpeg|gif|webp)$/, 
                 type: "asset/resource", 
                 generator: { filename: "assets/[name][ext]" } 
-            },
-           
+            }
         ]
     },
     devServer: {

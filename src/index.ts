@@ -1,9 +1,8 @@
 import * as a1lib from "alt1";
 import ChatboxReader from "alt1/chatbox";
 
-import "./index.html";
+
 import "./appconfig.json";
-import "./css/style.css";
 import "./icon.png";
 
 // ===== DECLARAÇÃO GLOBAL DO ALT1 =====

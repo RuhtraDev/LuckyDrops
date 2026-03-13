@@ -364,14 +364,13 @@ listHeader.addEventListener("click", function () {
 
 /***/ },
 
-/***/ "./appconfig.json"
-/*!************************!*\
-  !*** ./appconfig.json ***!
-  \************************/
-(module, __unused_webpack_exports, __webpack_require__) {
+/***/ "./index.html"
+/*!********************!*\
+  !*** ./index.html ***!
+  \********************/
+() {
 
-"use strict";
-module.exports = __webpack_require__.p + "appconfig.json";
+throw new Error("Module parse failed: Unexpected token (1:0)\nYou may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders\n> <html>\n| \n| <head>");
 
 /***/ },
 
@@ -383,17 +382,6 @@ module.exports = __webpack_require__.p + "appconfig.json";
 
 "use strict";
 module.exports = __webpack_require__.p + "assets/icon.png";
-
-/***/ },
-
-/***/ "./index.html"
-/*!********************!*\
-  !*** ./index.html ***!
-  \********************/
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-module.exports = __webpack_require__.p + "index.html";
 
 /***/ },
 
@@ -4523,6 +4511,17 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_alt1_base__;
 /******/ })()
 ;
 });
+
+/***/ },
+
+/***/ "./appconfig.json"
+/*!************************!*\
+  !*** ./appconfig.json ***!
+  \************************/
+(module) {
+
+"use strict";
+module.exports = /*#__PURE__*/JSON.parse('{"appName":"Ring Tracker","description":"Tracks Luck of the Dwarves and Hazelmere\'s Signet Ring drops","appUrl":"./index.html","configUrl":"./appconfig.json","iconUrl":"./assets/icon.png","defaultWidth":400,"defaultHeight":600,"minWidth":300,"minHeight":400,"maxWidth":800,"maxHeight":1000,"requestHandlers":[],"activators":[]}');
 
 /***/ }
 

@@ -430,5 +430,5 @@ if (savePhrasesBtn && phrasesTextarea) {
 // Versão
 const versionSpan = document.getElementById("version-number");
 if (versionSpan) {
-    versionSpan.textContent = "1.0.20.48";
+    versionSpan.textContent = "1.0.23.10";
 }

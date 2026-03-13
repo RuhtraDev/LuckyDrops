@@ -81,20 +81,41 @@ const DEFAULT_PHRASES = [
 ];
 // ===== FUNÇÕES DE ARMAZENAMENTO =====
 function loadCustomPhrases() {
-    const saved = localStorage.getItem(`${appName}_phrases`);
-    if (saved) {
-        try {
-            return JSON.parse(saved);
+    try {
+        const key = `${appName}_phrases`;
+        console.log(`🔍 Tentando carregar de: ${key}`);
+        const saved = localStorage.getItem(key);
+        console.log(`📦 Dados brutos:`, saved);
+        if (saved) {
+            const phrases = JSON.parse(saved);
+            if (Array.isArray(phrases) && phrases.length > 0) {
+                console.log(`✅ Frases carregadas (${phrases.length}):`, phrases);
+                return phrases;
+            }
         }
-        catch (_a) {
-            return DEFAULT_PHRASES;
-        }
+        console.log("📝 Nenhuma frase salva, usando padrão");
+        return DEFAULT_PHRASES;
     }
-    return DEFAULT_PHRASES;
+    catch (error) {
+        console.error("❌ Erro ao carregar frases:", error);
+        return DEFAULT_PHRASES;
+    }
 }
 function saveCustomPhrases(phrases) {
-    localStorage.setItem(`${appName}_phrases`, JSON.stringify(phrases));
-    alert("✅ Phrases saved!");
+    try {
+        localStorage.setItem(`${appName}_phrases`, JSON.stringify(phrases));
+        console.log("✅ Frases salvas:", phrases);
+        // Verificação automática
+        const saved = localStorage.getItem(`${appName}_phrases`);
+        if (saved) {
+            const loaded = JSON.parse(saved);
+            console.log("📋 Verificação OK:", loaded.length, "frases");
+        }
+    }
+    catch (error) {
+        console.error("❌ Erro:", error);
+        alert("Error saving phrases!");
+    }
 }
 function updateSaveData(...datasets) {
     const current = JSON.parse(localStorage.getItem(appName) || "{}");
@@ -322,14 +343,50 @@ listHeader === null || listHeader === void 0 ? void 0 : listHeader.addEventListe
     showItems();
 });
 // ===== CUSTOM PHRASES UI =====
-const phrasesTextarea = document.getElementById("customPhrases");
-const savePhrasesBtn = document.getElementById("savePhrases");
-if (phrasesTextarea && savePhrasesBtn) {
+function initPhrasesSystem() {
+    console.log("🔧 Inicializando sistema de frases...");
+    const phrasesTextarea = document.getElementById("customPhrases");
+    const savePhrasesBtn = document.getElementById("savePhrases");
+    if (!phrasesTextarea || !savePhrasesBtn) {
+        console.error("❌ Elementos não encontrados");
+        return;
+    }
+    // Carregar frases
     phrasesTextarea.value = loadCustomPhrases().join('\n');
-    savePhrasesBtn.addEventListener("click", () => {
-        const phrases = phrasesTextarea.value.split('\n').filter(p => p.trim());
+    // Remover eventos antigos
+    savePhrasesBtn.replaceWith(savePhrasesBtn.cloneNode(true));
+    const newSaveBtn = document.getElementById("savePhrases");
+    // Adicionar novo evento - AGORA USANDO A FUNÇÃO CORRETA
+    newSaveBtn.addEventListener("click", function (event) {
+        event.preventDefault();
+        console.log("🖱️ Botão SAVE clicado!");
+        const rawText = phrasesTextarea.value;
+        const phrases = rawText.split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+        if (phrases.length === 0) {
+            alert("⚠️ Please enter at least one phrase!");
+            return;
+        }
+        // ===== CORREÇÃO AQUI =====
+        // Usar a função saveCustomPhrases em vez de localStorage direto
         saveCustomPhrases(phrases);
+        // Feedback visual
+        const originalHTML = newSaveBtn.innerHTML;
+        newSaveBtn.innerHTML = "✅ Saved!";
+        newSaveBtn.style.backgroundColor = "#28a745";
+        setTimeout(() => {
+            newSaveBtn.innerHTML = originalHTML;
+            newSaveBtn.style.backgroundColor = "";
+        }, 2000);
     });
+}
+// Inicializar
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPhrasesSystem);
+}
+else {
+    initPhrasesSystem();
 }
 // ===== DISCORD WEBHOOK =====
 const webhookInput = document.getElementById("discordWebhook");

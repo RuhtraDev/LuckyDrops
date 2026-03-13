@@ -1,0 +1,293 @@
+/* ===== ESTILOS BASE ===== */
+.row {
+    text-align: center;
+}
+
+body {
+    margin-top: 10px !important;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    font-family: 'trajan-pro-3', Arial, sans-serif;
+}
+
+body.nis {
+    min-width: 250px !important;
+    overflow-x: hidden !important;
+}
+
+/* ===== TAMANHOS MÍNIMOS ===== */
+.itemList {
+    min-width: 250px !important;
+}
+
+.modal-dialog {
+    min-width: 250px !important;
+    margin: 10px !important;
+}
+
+.nisbutton {
+    min-width: 80px !important;
+    font-size: 8pt !important;
+    white-space: nowrap !important;
+}
+
+/* ===== ITENS DA LISTA ===== */
+.list-group-item {
+    background: transparent;
+    border: grey solid 1px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: .5rem .75rem;
+    text-align: left;
+    color: white;
+    transition: background-color 0.2s;
+    min-width: 230px !important;
+    word-wrap: break-word !important;
+}
+
+.list-group-item:hover {
+    background-color: #333333;
+    border-color: #ffd700;
+}
+
+.list-group-item.lotd {
+    border-left: 4px solid #f57c01;
+}
+
+.list-group-item.hazelmere {
+    border-left: 4px solid #ffd700;
+}
+
+.list-group {
+    height: calc(100vh - 4.25em);
+    overflow-y: scroll;
+    padding-top: 20px;
+}
+
+.list-group::-webkit-scrollbar {
+    display: none;
+}
+
+/* ===== HEADER ===== */
+.header {
+    text-align: center;
+    background: url(https://runeapps.org/nis/alt1-currentskin/nisbutton.png) 0px -100%/24px 400% repeat content-box;
+    background-color: black;
+    color: #422d00;
+    font-family: 'trajan-pro-3', 'Arial', sans-serif;
+    font-size: 1.2em;
+    padding: 10px 0;
+    position: fixed;
+    top: 10px;
+    width: 100%;
+    z-index: 1;
+    cursor: pointer;
+    border: 2px solid #f57c01;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.header:hover {
+    color: #ffffff;
+    border-bottom-color: #745900;
+}
+
+/* ===== TOTAL ===== */
+.total {
+    text-align: center;
+    color: rgb(255, 213, 27);
+    font-weight: bold;
+    font-size: 1.5em;
+    margin-top: 25px;
+    padding: 15px;
+}
+
+/* ===== RING ICONS ===== */
+.ring-icon {
+    display: inline-block;
+    width: 20px;
+    margin-right: 8px;
+    font-size: 1.2em;
+    min-width: 20px !important;
+}
+
+.lotd-color {
+    color: #f57c01;
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-right: 5px;
+}
+
+.hazelmere-color {
+    color: #ffd700;
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-right: 5px;
+}
+
+/* ===== MODAL ===== */
+.modal-body,
+.modal-header,
+.modal-footer {
+    background-image: url('https://runeapps.org/nis/alt1-currentskin/background.png') !important;
+    background-blend-mode: overlay !important;
+    background-color: #777777;
+    color: white;
+    border: 2px solid #ffd700;
+}
+
+/* ===== LEGEND CONTAINER ===== */
+.legend-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    padding: 10px;
+    background: #2a2a2a;
+    border-radius: 4px;
+    border: 1px solid #444;
+}
+
+/* ===== TEXT MUTED ===== */
+.text-muted {
+    color: #b4b4b4 !important;
+}
+
+/* ===== WARNING & DANGER ===== */
+.warning {
+    background-color: #ffaa00;
+    color: black;
+    font-weight: bold;
+}
+
+.danger {
+    background-color: #dc3545;
+    color: white;
+    font-weight: bold;
+}
+
+/* ===== CHAT SELECTOR ===== */
+.chat-selector {
+    background-color: #2a2a2a;
+    color: white;
+    border: 2px solid #444;
+    border-radius: 4px;
+    padding: 5px;
+    margin: 5px 0;
+    width: 100%;
+}
+
+.chat-selector:hover {
+    border-color: #ffd700;
+}
+
+/* ===== BUTTONS ===== */
+.button {
+    background-color: #ffd000;
+    color: white;
+    border: 2px solid #444;
+    border-radius: 4px;
+    padding: 8px 16px;
+    margin: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'trajan-pro-3', 'Arial', sans-serif;
+}
+
+.button:hover {
+    border-color: #ffd700;
+    background-color: #3a3a3a;
+}
+
+.button.primary {
+    border-color: #f57c01;
+}
+
+.button.primary:hover {
+    background-color: #f57c01;
+    color: black;
+}
+
+/* ===== BTN CLOSE ===== */
+.btn-close {
+    filter: brightness(0) invert(1) !important;
+    opacity: 0.8 !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-close:hover {
+    opacity: 1 !important;
+    filter: brightness(0) invert(0.8) sepia(1) hue-rotate(50deg) !important;
+    transform: scale(1.2) !important;
+}
+
+/* ===== TOTALS CONTAINER ===== */
+.totals-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: #2a2a2a;
+    border: 2px solid #444;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.totals-label {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.totals-value {
+    color: #00ffff;
+    font-weight: bold;
+}
+
+/* ===== TOOLTIPS ===== */
+.item-tooltip {
+    background-color: #2a2a2a;
+    border: 2px solid #ffd700;
+    border-radius: 4px;
+    padding: 8px;
+    color: white;
+    font-size: 12px;
+    max-width: 300px;
+}
+
+.tooltip-ring {
+    display: inline-block;
+    margin-right: 5px;
+}
+
+/* ===== ANIMAÇÕES ===== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+/* ===== MAIN ===== */
+.main {
+    overflow-y: scroll;
+    max-height: 75vh;
+    margin-top: 8px;
+}
+
+/* ===== RESPONSIVIDADE ===== */
+@media (max-width: 600px) {
+    .header {
+        font-size: 14px;
+    }
+    
+    .list-group-item {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+    
+    .button {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}

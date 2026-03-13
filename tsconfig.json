@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es2015",
     "module": "commonjs",
     "moduleResolution": "node",
+    "lib": ["es2015", "dom"],
     "strict": false,
     "noImplicitAny": false,
     "strictNullChecks": false,
@@ -14,7 +15,7 @@
     "allowSyntheticDefaultImports": true,
     "outDir": "./dist/",
     "rootDir": "./src/",
-    "types": []  // IMPORTANTE: não carregar tipos automáticos
+    "types": []
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

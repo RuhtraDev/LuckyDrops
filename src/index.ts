@@ -24,6 +24,37 @@ const timestampRegex = /\[\d{2}:\d{2}:\d{2}\]/g;
 const reader = new ChatboxReader();
 const appName = "LuckyDrops";
 
+// Frases personalizáveis
+const DEFAULT_PHRASES = [
+    "Your Luck of the Dwarves shines brightly and you receive:",
+    "Your Hazelmere's signet ring shines brightly. You receive:",
+    "The power of Hazelmere blesses your drop and doubles it before your very eyes:"
+];
+
+// Função para carregar frases personalizadas
+function loadCustomPhrases(): string[] {
+    const saved = localStorage.getItem(`${appName}_phrases`);
+    if (saved) {
+        return JSON.parse(saved);
+    }
+    return DEFAULT_PHRASES;
+}
+
+// Função para salvar frases
+function saveCustomPhrases(phrases: string[]) {
+    localStorage.setItem(`${appName}_phrases`, JSON.stringify(phrases));
+}
+
+// Função para construir regex das frases
+function buildRegexFromPhrases(phrases: string[]): RegExp[] {
+    return phrases.map(phrase => {
+        // Escapa caracteres especiais da regex e substitui placeholders
+        const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regexStr = `\\[\\d{2}:\\d{2}:\\d{2}\\] ${escaped.replace(/\\\(\d\+\\\\\)/g, '(\\d+)').replace(/\\\(\.\+\\\\\)/g, '(.+)')}`;
+        return new RegExp(regexStr);
+    });
+}
+
 // Regex para capturar drops
 const ringRegexes = {
     lotd: /\[\d{2}:\d{2}:\d{2}\] Your Luck of the Dwarves ring shines brightly\. You receive: (\d+) x (.+)/,
@@ -174,24 +205,36 @@ function readChatbox() {
     if (chatStr.trim() === "") return;
     const chatLines = chatStr.trim().split("\n");
     
+    // Carregar frases personalizadas e construir regex
+    const customPhrases = loadCustomPhrases();
+    const customRegexes = buildRegexFromPhrases(customPhrases);
+    
     chatLines.forEach(line => {
         const chatLine = line.trim();
         if (isInHistory(chatLine)) return;
         
-        let match = chatLine.match(ringRegexes.lotd);
-        let ringType = "LOTD";
+        let matched = false;
+        let ringType = "Custom";
+        let match: RegExpMatchArray | null = null;
         
-        if (!match) {
-            match = chatLine.match(ringRegexes.hazelmereNormal);
-            ringType = "Hazelmere";
+        // Testar cada frase personalizada
+        for (let i = 0; i < customRegexes.length; i++) {
+            match = chatLine.match(customRegexes[i]);
+            if (match) {
+                // Determinar o tipo baseado na frase
+                if (chatLine.includes("Luck of the Dwarves")) {
+                    ringType = "LOTD";
+                } else if (chatLine.includes("Hazelmere")) {
+                    ringType = "Hazelmere";
+                } else {
+                    ringType = `Custom ${i + 1}`;
+                }
+                matched = true;
+                break;
+            }
         }
         
-        if (!match) {
-            match = chatLine.match(ringRegexes.hazelmereDouble);
-            ringType = "Hazelmere (Double)";
-        }
-        
-        if (match) {
+        if (matched && match) {
             const quantity = parseInt(match[1]);
             const itemName = match[2].trim();
             
@@ -270,6 +313,23 @@ window.setTimeout(function () {
         }
     }, 1000);
 }, 50);
+
+// Configurar salvamento de frases personalizadas
+const savePhrasesBtn = document.getElementById("savePhrases");
+const phrasesTextarea = document.getElementById("customPhrases") as HTMLTextAreaElement;
+
+if (savePhrasesBtn && phrasesTextarea) {
+    // Carregar frases salvas
+    const savedPhrases = loadCustomPhrases();
+    phrasesTextarea.value = savedPhrases.join('\n');
+    
+    // Salvar quando clicar no botão
+    savePhrasesBtn.addEventListener("click", function() {
+        const phrases = phrasesTextarea.value.split('\n').filter(p => p.trim() !== '');
+        saveCustomPhrases(phrases);
+        alert("Custom phrases saved! They will be used for future drops.");
+    });
+}
 
 // Event Listeners
 exportButton.addEventListener("click", function () {

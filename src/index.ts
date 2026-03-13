@@ -32,16 +32,43 @@ const DEFAULT_PHRASES = [
 
 // ===== FUNÇÕES DE ARMAZENAMENTO =====
 function loadCustomPhrases(): string[] {
-    const saved = localStorage.getItem(`${appName}_phrases`);
-    if (saved) {
-        try { return JSON.parse(saved); } catch { return DEFAULT_PHRASES; }
+    try {
+        const key = `${appName}_phrases`;
+        console.log(`🔍 Tentando carregar de: ${key}`);
+        
+        const saved = localStorage.getItem(key);
+        console.log(`📦 Dados brutos:`, saved);
+        
+        if (saved) {
+            const phrases = JSON.parse(saved);
+            if (Array.isArray(phrases) && phrases.length > 0) {
+                console.log(`✅ Frases carregadas (${phrases.length}):`, phrases);
+                return phrases;
+            }
+        }
+        console.log("📝 Nenhuma frase salva, usando padrão");
+        return DEFAULT_PHRASES;
+    } catch (error) {
+        console.error("❌ Erro ao carregar frases:", error);
+        return DEFAULT_PHRASES;
     }
-    return DEFAULT_PHRASES;
 }
 
 function saveCustomPhrases(phrases: string[]) {
-    localStorage.setItem(`${appName}_phrases`, JSON.stringify(phrases));
-    alert("✅ Phrases saved!");
+    try {
+        localStorage.setItem(`${appName}_phrases`, JSON.stringify(phrases));
+        console.log("✅ Frases salvas:", phrases);
+        
+        // Verificação automática
+        const saved = localStorage.getItem(`${appName}_phrases`);
+        if (saved) {
+            const loaded = JSON.parse(saved);
+            console.log("📋 Verificação OK:", loaded.length, "frases");
+        }
+    } catch (error) {
+        console.error("❌ Erro:", error);
+        alert("Error saving phrases!");
+    }
 }
 
 function updateSaveData(...datasets: any[]) {
@@ -269,17 +296,75 @@ listHeader?.addEventListener("click", () => {
 });
 
 // ===== CUSTOM PHRASES UI =====
-const phrasesTextarea = document.getElementById("customPhrases") as HTMLTextAreaElement;
-const savePhrasesBtn = document.getElementById("savePhrases");
-
-if (phrasesTextarea && savePhrasesBtn) {
-    phrasesTextarea.value = loadCustomPhrases().join('\n');
+function initPhrasesSystem() {
+    console.log("🔧 Inicializando sistema de frases...");
     
-    savePhrasesBtn.addEventListener("click", () => {
-        const phrases = phrasesTextarea.value.split('\n').filter(p => p.trim());
+    const phrasesTextarea = document.getElementById("customPhrases") as HTMLTextAreaElement;
+    const savePhrasesBtn = document.getElementById("savePhrases");
+    
+    if (!phrasesTextarea) {
+        console.error("❌ Textarea 'customPhrases' não encontrado");
+        return;
+    }
+    
+    if (!savePhrasesBtn) {
+        console.error("❌ Botão 'savePhrases' não encontrado");
+        return;
+    }
+    
+    console.log("✅ Elementos encontrados");
+    
+    // Carregar frases salvas
+    try {
+        const savedPhrases = loadCustomPhrases();
+        phrasesTextarea.value = savedPhrases.join('\n');
+        console.log(`✅ ${savedPhrases.length} frases carregadas`);
+    } catch (error) {
+        console.error("❌ Erro ao carregar:", error);
+        phrasesTextarea.value = DEFAULT_PHRASES.join('\n');
+    }
+    
+    // IMPORTANTE: Não remover o botão! Apenas adicionar evento diretamente
+    savePhrasesBtn.onclick = function(event) {
+        event.preventDefault();
+        console.log("🖱️ Botão SAVE clicado!");
+        
+        const rawText = phrasesTextarea.value;
+        const phrases = rawText.split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+        
+        console.log(`📝 Frases processadas: ${phrases.length}`);
+        
+        if (phrases.length === 0) {
+            alert("⚠️ Please enter at least one phrase!");
+            return;
+        }
+        
+        // Salvar usando a função
         saveCustomPhrases(phrases);
-    });
+        
+        // Feedback visual simples
+        const originalText = savePhrasesBtn.textContent;
+        savePhrasesBtn.textContent = "✅ Saved!";
+        savePhrasesBtn.style.backgroundColor = "#28a745";
+        
+        setTimeout(() => {
+            savePhrasesBtn.textContent = originalText;
+            savePhrasesBtn.style.backgroundColor = "";
+        }, 1500);
+    };
+    
+    console.log("✅ Sistema de frases pronto!");
 }
+
+// Inicializar quando a página carregar
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPhrasesSystem);
+} else {
+    initPhrasesSystem();
+}
+
 
 // ===== DISCORD WEBHOOK =====
 const webhookInput = document.getElementById("discordWebhook") as HTMLInputElement;

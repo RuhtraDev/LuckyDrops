@@ -1,5 +1,5 @@
 {
-  "appName": "Ring Tracker",
+  "appName": "Lucky Drops",
   "description": "Tracks Luck of the Dwarves and Hazelmere's Signet Ring drops",
   "appUrl": "./index.html",
   "configUrl": "./appconfig.json",

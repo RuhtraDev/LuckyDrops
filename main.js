@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("sharp"); } catch(e) {} }()), (function webpackLoadOptionalExternalModule() { try { return require("canvas"); } catch(e) {} }()), (function webpackLoadOptionalExternalModule() { try { return require("electron/common"); } catch(e) {} }()));
+		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("canvas"); } catch(e) {} }()), (function webpackLoadOptionalExternalModule() { try { return require("electron/common"); } catch(e) {} }()), (function webpackLoadOptionalExternalModule() { try { return require("sharp"); } catch(e) {} }()));
 	else if(typeof define === 'function' && define.amd)
-		define(["sharp", "canvas", "electron/common"], factory);
+		define(["canvas", "electron/common", "sharp"], factory);
 	else if(typeof exports === 'object')
-		exports["LuckyDrops"] = factory((function webpackLoadOptionalExternalModule() { try { return require("sharp"); } catch(e) {} }()), (function webpackLoadOptionalExternalModule() { try { return require("canvas"); } catch(e) {} }()), (function webpackLoadOptionalExternalModule() { try { return require("electron/common"); } catch(e) {} }()));
+		exports["LuckyDrops"] = factory((function webpackLoadOptionalExternalModule() { try { return require("canvas"); } catch(e) {} }()), (function webpackLoadOptionalExternalModule() { try { return require("electron/common"); } catch(e) {} }()), (function webpackLoadOptionalExternalModule() { try { return require("sharp"); } catch(e) {} }()));
 	else
-		root["LuckyDrops"] = factory(root["sharp"], root["canvas"], root["electron/common"]);
-})(self, (__WEBPACK_EXTERNAL_MODULE_sharp__, __WEBPACK_EXTERNAL_MODULE_canvas__, __WEBPACK_EXTERNAL_MODULE_electron_common__) => {
+		root["LuckyDrops"] = factory(root["canvas"], root["electron/common"], root["sharp"]);
+})(self, (__WEBPACK_EXTERNAL_MODULE_canvas__, __WEBPACK_EXTERNAL_MODULE_electron_common__, __WEBPACK_EXTERNAL_MODULE_sharp__) => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
@@ -58,8 +58,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const a1lib = __importStar(__webpack_require__(/*! alt1 */ "../node_modules/alt1/dist/base/index.js"));
 const chatbox_1 = __importDefault(__webpack_require__(/*! alt1/chatbox */ "../node_modules/alt1/dist/chatbox/index.js"));
-__webpack_require__(/*! ./appconfig.json */ "./appconfig.json");
-__webpack_require__(/*! ./icon.png */ "./icon.png");
 // Elementos DOM
 const itemList = document.querySelector(".itemList");
 const chatSelector = document.querySelector(".chat");
@@ -71,55 +69,58 @@ const appColor = a1lib.mixColor(0, 255, 255);
 const timestampRegex = /\[\d{2}:\d{2}:\d{2}\]/g;
 const reader = new chatbox_1.default();
 const appName = "LuckyDrops";
-// Frases personalizáveis
+// Configuração inicial
+reader.readargs = {
+    colors: [a1lib.mixColor(245, 124, 1), a1lib.mixColor(255, 215, 0)]
+};
+// Frases padrão
 const DEFAULT_PHRASES = [
-    "Your Luck of the Dwarves shines brightly and you receive:",
-    "Your Hazelmere's signet ring shines brightly. You receive:",
-    "The power of Hazelmere blesses your drop and doubles it before your very eyes:"
+    "Your Luck of the Dwarves shines brightly and you receive: (\\d+) x (.+)",
+    "Your Hazelmere's signet ring shines brightly. You receive: (\\d+) x (.+)",
+    "The power of Hazelmere blesses your drop and doubles it before your very eyes: (\\d+) x (.+)"
 ];
-// Função para carregar frases personalizadas
+// ===== FUNÇÕES DE ARMAZENAMENTO =====
 function loadCustomPhrases() {
     const saved = localStorage.getItem(`${appName}_phrases`);
     if (saved) {
-        return JSON.parse(saved);
+        try {
+            return JSON.parse(saved);
+        }
+        catch (_a) {
+            return DEFAULT_PHRASES;
+        }
     }
     return DEFAULT_PHRASES;
 }
-// Função para salvar frases
 function saveCustomPhrases(phrases) {
     localStorage.setItem(`${appName}_phrases`, JSON.stringify(phrases));
+    alert("✅ Phrases saved!");
 }
-// Função para construir regex das frases
-function buildRegexFromPhrases(phrases) {
-    return phrases.map(phrase => {
-        // Escapa caracteres especiais da regex e substitui placeholders
-        const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regexStr = `\\[\\d{2}:\\d{2}:\\d{2}\\] ${escaped.replace(/\\\(\d\+\\\\\)/g, '(\\d+)').replace(/\\\(\.\+\\\\\)/g, '(.+)')}`;
-        return new RegExp(regexStr);
+function updateSaveData(...datasets) {
+    const current = JSON.parse(localStorage.getItem(appName) || "{}");
+    datasets.forEach(data => {
+        const key = Object.keys(data)[0];
+        const value = data[key];
+        if (key === "data") {
+            if (!current[key])
+                current[key] = [];
+            if (!Array.isArray(value))
+                current[key].push(value);
+            else
+                current[key] = value;
+        }
+        else {
+            current[key] = value;
+        }
     });
+    localStorage.setItem(appName, JSON.stringify(current));
 }
-// Regex para capturar drops
-const ringRegexes = {
-    lotd: /\[\d{2}:\d{2}:\d{2}\] Your Luck of the Dwarves ring shines brightly\. You receive: (\d+) x (.+)/,
-    hazelmereNormal: /\[\d{2}:\d{2}:\d{2}\] Your Hazelmere's signet ring shines brightly\. You receive: (\d+) x (.+)/,
-    hazelmereDouble: /\[\d{2}:\d{2}:\d{2}\] The power of Hazelmere blesses your drop and doubles it before your very eyes: (\d+) x (.+)/
-};
-// Configurar cores do chat
-reader.readargs = {
-    colors: [
-        a1lib.mixColor(245, 124, 1),
-        a1lib.mixColor(255, 215, 0),
-    ],
-};
-// Verificar se está no Alt1
-if (window.alt1) {
-    window.alt1.identifyAppUrl("./appconfig.json");
+function getSaveData(key) {
+    var _a;
+    const data = JSON.parse(localStorage.getItem(appName) || "null");
+    return (_a = data === null || data === void 0 ? void 0 : data[key]) !== null && _a !== void 0 ? _a : false;
 }
-else {
-    let addappurl = `alt1://addapp/${new URL("./appconfig.json", document.location.href).href}`;
-    itemList.innerHTML = `<li>Alt1 not detected, click <a href='${addappurl}'>here</a> to add this app to Alt1</li>`;
-}
-// Funções auxiliares
+// ===== CHAT FUNCTIONS =====
 function showSelectedChat(chat) {
     var _a;
     if (!((_a = chat === null || chat === void 0 ? void 0 : chat.mainbox) === null || _a === void 0 ? void 0 : _a.rect))
@@ -147,73 +148,12 @@ function isInHistory(chatLine) {
         return false;
     return history.split("\n").some(line => line.trim() === chatLine);
 }
-function updateSaveData(...datasets) {
-    const current = JSON.parse(localStorage.getItem(appName) || "{}");
-    datasets.forEach(data => {
-        const key = Object.keys(data)[0];
-        const value = data[key];
-        if (key === "data") {
-            if (!current[key])
-                current[key] = [];
-            if (!Array.isArray(value)) {
-                current[key].push(value);
-            }
-            else {
-                current[key] = value;
-            }
-        }
-        else {
-            current[key] = value;
-        }
-    });
-    localStorage.setItem(appName, JSON.stringify(current));
-}
-function getSaveData(key) {
-    var _a;
-    const data = JSON.parse(localStorage.getItem(appName) || "null");
-    return (_a = data === null || data === void 0 ? void 0 : data[key]) !== null && _a !== void 0 ? _a : false;
-}
-function showItems() {
-    if (!itemList || !listHeader || !itemTotal)
-        return;
-    itemList.querySelectorAll("li.item").forEach(el => el.remove());
-    const data = getSaveData("data") || [];
-    itemTotal.innerHTML = String(data.length);
-    if (getSaveData("mode") === "total") {
-        listHeader.dataset.show = "history";
-        listHeader.title = "Click to show History";
-        listHeader.innerHTML = "Ring Drop Totals";
-        const totals = {};
-        data.forEach((item) => {
-            if (!totals[item.name]) {
-                totals[item.name] = { total: 0, lotd: 0, hazelmere: 0 };
-            }
-            totals[item.name].total += item.quantity;
-            if (item.type.includes("LOTD")) {
-                totals[item.name].lotd += item.quantity;
-            }
-            else {
-                totals[item.name].hazelmere += item.quantity;
-            }
-        });
-        Object.keys(totals).sort().forEach(item => {
-            const t = totals[item];
-            itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item">${item}: ${t.total} (LOTD: ${t.lotd} | Hazel: ${t.hazelmere})</li>`);
-        });
-    }
-    else {
-        listHeader.dataset.show = "total";
-        listHeader.title = "Click to show Totals";
-        listHeader.innerHTML = "Ring Drop History";
-        if (data.length > 0) {
-            data.slice().reverse().forEach((item) => {
-                const ringIcon = item.type.includes("LOTD") ? "💎" : "👑";
-                itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item" title="${new Date(item.time).toLocaleString()} - ${item.type}">
-                        ${ringIcon} ${item.item}
-                    </li>`);
-            });
-        }
-    }
+function getTypeFromPhrase(phrase) {
+    if (phrase.includes("Luck of the Dwarves"))
+        return "LOTD";
+    if (phrase.includes("Hazelmere"))
+        return phrase.includes("doubles") ? "HSR_DOUBLE" : "HSR";
+    return "CUSTOM";
 }
 function readChatbox() {
     const opts = reader.read() || [];
@@ -232,198 +172,181 @@ function readChatbox() {
             }
         }
     }
-    if (chatStr.trim() === "")
+    if (!chatStr.trim())
         return;
     const chatLines = chatStr.trim().split("\n");
-    // Carregar frases personalizadas e construir regex
-    const customPhrases = loadCustomPhrases();
-    const customRegexes = buildRegexFromPhrases(customPhrases);
+    const phrases = loadCustomPhrases();
     chatLines.forEach(line => {
         const chatLine = line.trim();
         if (isInHistory(chatLine))
             return;
-        let matched = false;
-        let ringType = "Custom";
-        let match = null;
-        // Testar cada frase personalizada
-        for (let i = 0; i < customRegexes.length; i++) {
-            match = chatLine.match(customRegexes[i]);
+        for (const phrase of phrases) {
+            const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                .replace(/\\\(\\d\+\\\\\)/g, '(\\d+)')
+                .replace(/\\\(\.\+\\\\\)/g, '(.+)');
+            const regex = new RegExp(`\\[\\d{2}:\\d{2}:\\d{2}\\] ${escaped}`);
+            const match = chatLine.match(regex);
             if (match) {
-                // Determinar o tipo baseado na frase
-                if (chatLine.includes("Luck of the Dwarves")) {
-                    ringType = "LOTD";
-                }
-                else if (chatLine.includes("Hazelmere")) {
-                    ringType = "Hazelmere";
-                }
-                else {
-                    ringType = `Custom ${i + 1}`;
-                }
-                matched = true;
+                const quantity = parseInt(match[1]);
+                const itemName = match[2].trim();
+                const dropType = getTypeFromPhrase(phrase);
+                const dropItem = {
+                    item: `${quantity} x ${itemName}`,
+                    quantity, name: itemName, type: dropType,
+                    time: new Date(), chatLine
+                };
+                console.log(`${dropType} drop:`, dropItem);
+                updateSaveData({ data: dropItem });
+                updateChatHistory(chatLine);
+                showItems();
                 break;
             }
         }
-        if (matched && match) {
-            const quantity = parseInt(match[1]);
-            const itemName = match[2].trim();
-            const dropItem = {
-                item: `${quantity} x ${itemName}`,
-                quantity: quantity,
-                name: itemName,
-                type: ringType,
-                time: new Date(),
-                chatLine: chatLine
-            };
-            console.log(`${ringType} drop detectado:`, dropItem);
-            updateSaveData({ data: dropItem });
-            updateChatHistory(chatLine);
-            checkAnnounce(dropItem);
-            showItems();
-        }
     });
 }
-function checkAnnounce(dropItem) {
-    const webhook = getSaveData("discordWebhook");
-    if (webhook) {
-        const emoji = dropItem.type.includes("LOTD") ? "💎" : "👑";
-        fetch(webhook, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                username: "Lucky Drops",
-                content: `${emoji} ${new Date().toLocaleString()}: ${dropItem.type} - ${dropItem.item}`
-            })
-        }).catch(err => console.error("Discord webhook error:", err));
+function showItems() {
+    if (!itemList)
+        return;
+    itemList.querySelectorAll("li.item:not(.header):not(.total):not(.loading)").forEach(el => el.remove());
+    const data = getSaveData("data") || [];
+    itemTotal.innerHTML = String(data.length);
+    if (getSaveData("mode") === "total") {
+        listHeader.innerHTML = "Drop Totals";
+        listHeader.dataset.show = "history";
+        const totals = {};
+        data.forEach((item) => {
+            if (!totals[item.name])
+                totals[item.name] = { total: 0, lotd: 0, hsr: 0 };
+            totals[item.name].total += item.quantity;
+            if (item.type === "LOTD")
+                totals[item.name].lotd += item.quantity;
+            else if (item.type.includes("HSR"))
+                totals[item.name].hsr += item.quantity;
+        });
+        Object.keys(totals).sort().forEach(name => {
+            const t = totals[name];
+            itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item">${name}: ${t.total} (LOTD: ${t.lotd} | HSR: ${t.hsr})</li>`);
+        });
+    }
+    else {
+        listHeader.innerHTML = "Drop History";
+        listHeader.dataset.show = "total";
+        data.slice().reverse().forEach((item) => {
+            const icon = item.type === "LOTD" ? "💎" : item.type.includes("HSR") ? "👑" : "📦";
+            itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item" title="${new Date(item.time).toLocaleString()} - ${item.type}">${icon} ${item.item}</li>`);
+        });
     }
 }
-// Inicialização
-window.setTimeout(function () {
-    let findChat = setInterval(function () {
-        if (reader.pos === null) {
+// ===== EVENT LISTENERS =====
+if (window.alt1) {
+    window.alt1.identifyAppUrl("./appconfig.json");
+}
+else {
+    itemList.innerHTML = '<li>Alt1 not detected. <a href="https://alt1.org">Get Alt1</a></li>';
+}
+window.setTimeout(() => {
+    let findChat = setInterval(() => {
+        var _a;
+        if (!reader.pos) {
             reader.find();
+            return;
         }
-        else {
-            clearInterval(findChat);
-            if (reader.pos && reader.pos.boxes) {
-                reader.pos.boxes.forEach((box, i) => {
-                    chatSelector.insertAdjacentHTML("beforeend", `<option value="${i}">Chat ${i}</option>`);
-                });
-                chatSelector.addEventListener("change", function (e) {
-                    const select = e.target;
-                    if (reader.pos && reader.pos.boxes[Number(select.value)]) {
-                        reader.pos.mainbox = reader.pos.boxes[Number(select.value)];
-                        showSelectedChat(reader.pos);
-                        updateSaveData({ chat: Number(select.value) });
-                    }
-                    select.value = "";
-                });
-                const savedChat = getSaveData("chat");
-                if (savedChat !== false && reader.pos.boxes[Number(savedChat)]) {
-                    reader.pos.mainbox = reader.pos.boxes[Number(savedChat)];
-                }
-                else {
-                    if (reader.pos.boxes[0]) {
-                        reader.pos.mainbox = reader.pos.boxes[0];
-                    }
-                    updateSaveData({ chat: 0 });
-                }
-                if (reader.pos) {
+        clearInterval(findChat);
+        if ((_a = reader.pos) === null || _a === void 0 ? void 0 : _a.boxes) {
+            reader.pos.boxes.forEach((_, i) => {
+                chatSelector.insertAdjacentHTML("beforeend", `<option value="${i}">Chat ${i}</option>`);
+            });
+            chatSelector.addEventListener("change", (e) => {
+                var _a;
+                const select = e.target;
+                if ((_a = reader.pos) === null || _a === void 0 ? void 0 : _a.boxes[Number(select.value)]) {
+                    reader.pos.mainbox = reader.pos.boxes[Number(select.value)];
                     showSelectedChat(reader.pos);
+                    updateSaveData({ chat: Number(select.value) });
                 }
-                showItems();
-                setInterval(readChatbox, 600);
+            });
+            const savedChat = getSaveData("chat");
+            if (savedChat !== false && reader.pos.boxes[Number(savedChat)]) {
+                reader.pos.mainbox = reader.pos.boxes[Number(savedChat)];
             }
+            else if (reader.pos.boxes[0]) {
+                reader.pos.mainbox = reader.pos.boxes[0];
+                updateSaveData({ chat: 0 });
+            }
+            if (reader.pos)
+                showSelectedChat(reader.pos);
+            showItems();
+            setInterval(readChatbox, 600);
         }
     }, 1000);
 }, 50);
-// Configurar salvamento de frases personalizadas
-const savePhrasesBtn = document.getElementById("savePhrases");
-const phrasesTextarea = document.getElementById("customPhrases");
-if (savePhrasesBtn && phrasesTextarea) {
-    // Carregar frases salvas
-    const savedPhrases = loadCustomPhrases();
-    phrasesTextarea.value = savedPhrases.join('\n');
-    // Salvar quando clicar no botão
-    savePhrasesBtn.addEventListener("click", function () {
-        const phrases = phrasesTextarea.value.split('\n').filter(p => p.trim() !== '');
-        saveCustomPhrases(phrases);
-        alert("Custom phrases saved! They will be used for future drops.");
-    });
-}
-// Event Listeners
-exportButton.addEventListener("click", function () {
+exportButton === null || exportButton === void 0 ? void 0 : exportButton.addEventListener("click", () => {
     const data = getSaveData("data") || [];
     const mode = getSaveData("mode");
-    let csv = "";
-    let filename = "";
+    let csv = mode === "total" ? "Item,Total,LOTD,HSR\n" : "Item,Quantity,Type,Date,Time\n";
+    let filename = mode === "total" ? "totals.csv" : "history.csv";
     if (mode === "total") {
-        csv = "Item,Total Quantity,LOTD Quantity,Hazelmere Quantity\n";
         const totals = {};
         data.forEach((item) => {
-            if (!totals[item.name]) {
-                totals[item.name] = { total: 0, lotd: 0, hazelmere: 0 };
-            }
+            if (!totals[item.name])
+                totals[item.name] = { total: 0, lotd: 0, hsr: 0 };
             totals[item.name].total += item.quantity;
-            if (item.type.includes("LOTD")) {
+            if (item.type === "LOTD")
                 totals[item.name].lotd += item.quantity;
-            }
-            else {
-                totals[item.name].hazelmere += item.quantity;
-            }
+            else if (item.type.includes("HSR"))
+                totals[item.name].hsr += item.quantity;
         });
-        Object.keys(totals).sort().forEach(item => {
-            csv += `${item},${totals[item].total},${totals[item].lotd},${totals[item].hazelmere}\n`;
-        });
-        filename = "LuckyDrops_Totals.csv";
+        Object.keys(totals).sort().forEach(n => csv += `${n},${totals[n].total},${totals[n].lotd},${totals[n].hsr}\n`);
     }
     else {
-        csv = "Item,Quantity,Ring Type,Date,Time\n";
         data.forEach((item) => {
-            const date = new Date(item.time);
-            csv += `${item.name},${item.quantity},${item.type},${date.toLocaleDateString()},${date.toLocaleTimeString()}\n`;
+            const d = new Date(item.time);
+            csv += `${item.name},${item.quantity},${item.type},${d.toLocaleDateString()},${d.toLocaleTimeString()}\n`;
         });
-        filename = "LuckyDrops_History.csv";
     }
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob([csv], { type: "text/csv" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = filename;
     link.click();
 });
-clearButton.addEventListener("click", function () {
-    if (confirm("Are you sure you want to reset all data?")) {
+clearButton === null || clearButton === void 0 ? void 0 : clearButton.addEventListener("click", () => {
+    if (confirm("Reset all data?")) {
         localStorage.removeItem(appName);
         sessionStorage.removeItem(`${appName}chatHistory`);
         location.reload();
     }
 });
-listHeader.addEventListener("click", function () {
-    const newMode = this.dataset.show === "total" ? "history" : "total";
-    updateSaveData({ mode: newMode });
+listHeader === null || listHeader === void 0 ? void 0 : listHeader.addEventListener("click", () => {
+    updateSaveData({ mode: listHeader.dataset.show });
     showItems();
 });
-// Inicialização de dados
-(function init() {
-    if (!localStorage.getItem(appName)) {
-        localStorage.setItem(appName, JSON.stringify({
-            chat: 0,
-            data: [],
-            mode: "history"
-        }));
-    }
-})();
+// ===== CUSTOM PHRASES UI =====
+const phrasesTextarea = document.getElementById("customPhrases");
+const savePhrasesBtn = document.getElementById("savePhrases");
+if (phrasesTextarea && savePhrasesBtn) {
+    phrasesTextarea.value = loadCustomPhrases().join('\n');
+    savePhrasesBtn.addEventListener("click", () => {
+        const phrases = phrasesTextarea.value.split('\n').filter(p => p.trim());
+        saveCustomPhrases(phrases);
+    });
+}
+// ===== DISCORD WEBHOOK =====
+const webhookInput = document.getElementById("discordWebhook");
+if (webhookInput) {
+    webhookInput.value = getSaveData("discordWebhook") || "";
+    webhookInput.addEventListener("change", () => updateSaveData({ discordWebhook: webhookInput.value }));
+}
+// ===== VERSION =====
+const VERSION = "2.0.0";
+const versionSpan = document.getElementById("version-number");
+if (versionSpan)
+    versionSpan.textContent = VERSION;
+// ===== INIT =====
+if (!localStorage.getItem(appName)) {
+    localStorage.setItem(appName, JSON.stringify({ chat: 0, data: [], mode: "history" }));
+}
 
-
-/***/ },
-
-/***/ "./icon.png"
-/*!******************!*\
-  !*** ./icon.png ***!
-  \******************/
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-module.exports = __webpack_require__.p + "assets/icon.png";
 
 /***/ },
 
@@ -4554,17 +4477,6 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_alt1_base__;
 ;
 });
 
-/***/ },
-
-/***/ "./appconfig.json"
-/*!************************!*\
-  !*** ./appconfig.json ***!
-  \************************/
-(module) {
-
-"use strict";
-module.exports = /*#__PURE__*/JSON.parse('{"appName":"Ring Tracker","description":"Tracks Luck of the Dwarves and Hazelmere\'s Signet Ring drops","appUrl":"./index.html","configUrl":"./appconfig.json","iconUrl":"./assets/icon.png","defaultWidth":400,"defaultHeight":600,"minWidth":300,"minHeight":400,"maxWidth":800,"maxHeight":1000,"requestHandlers":[],"activators":[]}');
-
 /***/ }
 
 /******/ 	});
@@ -4598,42 +4510,6 @@ module.exports = /*#__PURE__*/JSON.parse('{"appName":"Ring Tracker","description
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/ 	
-/************************************************************************/
-/******/ 	/* webpack/runtime/global */
-/******/ 	(() => {
-/******/ 		__webpack_require__.g = (function() {
-/******/ 			if (typeof globalThis === 'object') return globalThis;
-/******/ 			try {
-/******/ 				return this || new Function('return this')();
-/******/ 			} catch (e) {
-/******/ 				if (typeof window === 'object') return window;
-/******/ 			}
-/******/ 		})();
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/publicPath */
-/******/ 	(() => {
-/******/ 		var scriptUrl;
-/******/ 		if (__webpack_require__.g.importScripts) scriptUrl = __webpack_require__.g.location + "";
-/******/ 		var document = __webpack_require__.g.document;
-/******/ 		if (!scriptUrl && document) {
-/******/ 			if (document.currentScript && document.currentScript.tagName.toUpperCase() === 'SCRIPT')
-/******/ 				scriptUrl = document.currentScript.src;
-/******/ 			if (!scriptUrl) {
-/******/ 				var scripts = document.getElementsByTagName("script");
-/******/ 				if(scripts.length) {
-/******/ 					var i = scripts.length - 1;
-/******/ 					while (i > -1 && (!scriptUrl || !/^http(s?):/.test(scriptUrl))) scriptUrl = scripts[i--].src;
-/******/ 				}
-/******/ 			}
-/******/ 		}
-/******/ 		// When supporting browsers where an automatic publicPath is not supported you must specify an output.publicPath manually via configuration
-/******/ 		// or pass an empty string ("") and set the __webpack_public_path__ variable from your code to use your own logic.
-/******/ 		if (!scriptUrl) throw new Error("Automatic publicPath is not supported in this browser");
-/******/ 		scriptUrl = scriptUrl.replace(/^blob:/, "").replace(/#.*$/, "").replace(/\?.*$/, "").replace(/\/[^\/]+$/, "/");
-/******/ 		__webpack_require__.p = scriptUrl;
-/******/ 	})();
 /******/ 	
 /************************************************************************/
 /******/ 	

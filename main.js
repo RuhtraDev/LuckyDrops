@@ -58,20 +58,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const a1lib = __importStar(__webpack_require__(/*! alt1 */ "../node_modules/alt1/dist/base/index.js"));
 const chatbox_1 = __importDefault(__webpack_require__(/*! alt1/chatbox */ "../node_modules/alt1/dist/chatbox/index.js"));
-// Elementos DOM
+// ===== ELEMENTOS DOM =====
 const itemList = document.querySelector(".itemList");
 const chatSelector = document.querySelector(".chat");
 const exportButton = document.querySelector(".export");
 const clearButton = document.querySelector(".clear");
 const listHeader = document.querySelector(".header");
 const itemTotal = document.getElementById("total");
+// ===== CONSTANTES =====
 const appColor = a1lib.mixColor(0, 255, 255);
 const timestampRegex = /\[\d{2}:\d{2}:\d{2}\]/g;
 const reader = new chatbox_1.default();
 const appName = "LuckyDrops";
-// Configuração inicial
+const VERSION = "1.0.19.46";
+// Configuração inicial do leitor de chat
 reader.readargs = {
-    colors: [a1lib.mixColor(245, 124, 1), a1lib.mixColor(255, 215, 0)]
+    colors: [
+        a1lib.mixColor(245, 124, 1), // Laranja - LOTD
+        a1lib.mixColor(255, 215, 0) // Dourado - HSR
+    ]
 };
 // Frases padrão
 const DEFAULT_PHRASES = [
@@ -83,17 +88,16 @@ const DEFAULT_PHRASES = [
 function loadCustomPhrases() {
     try {
         const key = `${appName}_phrases`;
-        console.log(`🔍 Tentando carregar de: ${key}`);
+        console.log(`🔍 Carregando frases de: ${key}`);
         const saved = localStorage.getItem(key);
-        console.log(`📦 Dados brutos:`, saved);
         if (saved) {
             const phrases = JSON.parse(saved);
             if (Array.isArray(phrases) && phrases.length > 0) {
-                console.log(`✅ Frases carregadas (${phrases.length}):`, phrases);
+                console.log(`✅ ${phrases.length} frases carregadas`);
                 return phrases;
             }
         }
-        console.log("📝 Nenhuma frase salva, usando padrão");
+        console.log("📝 Usando frases padrão");
         return DEFAULT_PHRASES;
     }
     catch (error) {
@@ -104,16 +108,10 @@ function loadCustomPhrases() {
 function saveCustomPhrases(phrases) {
     try {
         localStorage.setItem(`${appName}_phrases`, JSON.stringify(phrases));
-        console.log("✅ Frases salvas:", phrases);
-        // Verificação automática
-        const saved = localStorage.getItem(`${appName}_phrases`);
-        if (saved) {
-            const loaded = JSON.parse(saved);
-            console.log("📋 Verificação OK:", loaded.length, "frases");
-        }
+        console.log(`✅ ${phrases.length} frases salvas`);
     }
     catch (error) {
-        console.error("❌ Erro:", error);
+        console.error("❌ Erro ao salvar frases:", error);
         alert("Error saving phrases!");
     }
 }
@@ -141,7 +139,7 @@ function getSaveData(key) {
     const data = JSON.parse(localStorage.getItem(appName) || "null");
     return (_a = data === null || data === void 0 ? void 0 : data[key]) !== null && _a !== void 0 ? _a : false;
 }
-// ===== CHAT FUNCTIONS =====
+// ===== FUNÇÕES DO CHAT =====
 function showSelectedChat(chat) {
     var _a;
     if (!((_a = chat === null || chat === void 0 ? void 0 : chat.mainbox) === null || _a === void 0 ? void 0 : _a.rect))
@@ -172,25 +170,26 @@ function isInHistory(chatLine) {
 function getTypeFromPhrase(phrase) {
     if (phrase.includes("Luck of the Dwarves"))
         return "LOTD";
-    if (phrase.includes("Hazelmere"))
+    if (phrase.includes("Hazelmere")) {
         return phrase.includes("doubles") ? "HSR_DOUBLE" : "HSR";
+    }
     return "CUSTOM";
 }
 function readChatbox() {
     const opts = reader.read() || [];
+    if (opts.length === 0)
+        return;
     let chatStr = "";
-    if (opts.length > 0) {
-        for (let i = 0; i < opts.length; i++) {
-            if (!opts[i].text.match(timestampRegex) && i === 0)
-                continue;
-            if (opts[i].text.match(timestampRegex)) {
-                if (i > 0)
-                    chatStr += "\n";
-                chatStr += opts[i].text + " ";
-            }
-            else {
-                chatStr += opts[i].text;
-            }
+    for (let i = 0; i < opts.length; i++) {
+        if (!opts[i].text.match(timestampRegex) && i === 0)
+            continue;
+        if (opts[i].text.match(timestampRegex)) {
+            if (i > 0)
+                chatStr += "\n";
+            chatStr += opts[i].text + " ";
+        }
+        else {
+            chatStr += opts[i].text;
         }
     }
     if (!chatStr.trim())
@@ -202,7 +201,8 @@ function readChatbox() {
         if (isInHistory(chatLine))
             return;
         for (const phrase of phrases) {
-            const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            const escaped = phrase
+                .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
                 .replace(/\\\(\\d\+\\\\\)/g, '(\\d+)')
                 .replace(/\\\(\.\+\\\\\)/g, '(.+)');
             const regex = new RegExp(`\\[\\d{2}:\\d{2}:\\d{2}\\] ${escaped}`);
@@ -213,10 +213,13 @@ function readChatbox() {
                 const dropType = getTypeFromPhrase(phrase);
                 const dropItem = {
                     item: `${quantity} x ${itemName}`,
-                    quantity, name: itemName, type: dropType,
-                    time: new Date(), chatLine
+                    quantity,
+                    name: itemName,
+                    type: dropType,
+                    time: new Date(),
+                    chatLine
                 };
-                console.log(`${dropType} drop:`, dropItem);
+                console.log(`${dropType} drop: ${quantity} x ${itemName}`);
                 updateSaveData({ data: dropItem });
                 updateChatHistory(chatLine);
                 showItems();
@@ -228,21 +231,27 @@ function readChatbox() {
 function showItems() {
     if (!itemList)
         return;
+    // Remove itens antigos (exceto header, total e loading)
     itemList.querySelectorAll("li.item:not(.header):not(.total):not(.loading)").forEach(el => el.remove());
     const data = getSaveData("data") || [];
-    itemTotal.innerHTML = String(data.length);
-    if (getSaveData("mode") === "total") {
+    if (itemTotal)
+        itemTotal.innerHTML = String(data.length);
+    const mode = getSaveData("mode");
+    if (mode === "total") {
         listHeader.innerHTML = "Drop Totals";
         listHeader.dataset.show = "history";
         const totals = {};
         data.forEach((item) => {
-            if (!totals[item.name])
+            if (!totals[item.name]) {
                 totals[item.name] = { total: 0, lotd: 0, hsr: 0 };
+            }
             totals[item.name].total += item.quantity;
-            if (item.type === "LOTD")
+            if (item.type === "LOTD") {
                 totals[item.name].lotd += item.quantity;
-            else if (item.type.includes("HSR"))
+            }
+            else if (item.type.includes("HSR")) {
                 totals[item.name].hsr += item.quantity;
+            }
         });
         Object.keys(totals).sort().forEach(name => {
             const t = totals[name];
@@ -253,19 +262,27 @@ function showItems() {
         listHeader.innerHTML = "Drop History";
         listHeader.dataset.show = "total";
         data.slice().reverse().forEach((item) => {
-            const icon = item.type === "LOTD" ? "💎" : item.type.includes("HSR") ? "👑" : "📦";
+            let icon = "📦";
+            if (item.type === "LOTD")
+                icon = "💎";
+            else if (item.type.includes("HSR"))
+                icon = "👑";
             itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item" title="${new Date(item.time).toLocaleString()} - ${item.type}">${icon} ${item.item}</li>`);
         });
     }
 }
-// ===== EVENT LISTENERS =====
+// ===== INICIALIZAÇÃO DO ALT1 =====
 if (window.alt1) {
     window.alt1.identifyAppUrl("./appconfig.json");
+    console.log("✅ Alt1 detectado");
 }
 else {
-    itemList.innerHTML = '<li>Alt1 not detected. <a href="https://alt1.org">Get Alt1</a></li>';
+    itemList.innerHTML = '<li class="list-group-item item">Alt1 not detected. <a href="https://alt1.org">Get Alt1</a></li>';
+    console.log("⚠️ Alt1 não detectado");
 }
+// ===== INICIALIZAÇÃO DO CHAT =====
 window.setTimeout(() => {
+    console.log("🔍 Iniciando busca por chats...");
     let findChat = setInterval(() => {
         var _a;
         if (!reader.pos) {
@@ -273,53 +290,77 @@ window.setTimeout(() => {
             return;
         }
         clearInterval(findChat);
-        if ((_a = reader.pos) === null || _a === void 0 ? void 0 : _a.boxes) {
+        console.log("✅ Chat encontrado!");
+        // Remover mensagem de loading
+        const loadingEl = document.querySelector(".item.loading");
+        if (loadingEl)
+            loadingEl.remove();
+        if (((_a = reader.pos) === null || _a === void 0 ? void 0 : _a.boxes) && reader.pos.boxes.length > 0) {
+            console.log(`📋 ${reader.pos.boxes.length} chats detectados`);
+            // Popular dropdown
             reader.pos.boxes.forEach((_, i) => {
                 chatSelector.insertAdjacentHTML("beforeend", `<option value="${i}">Chat ${i}</option>`);
             });
+            // Evento de mudança de chat
             chatSelector.addEventListener("change", (e) => {
                 var _a;
                 const select = e.target;
-                if ((_a = reader.pos) === null || _a === void 0 ? void 0 : _a.boxes[Number(select.value)]) {
-                    reader.pos.mainbox = reader.pos.boxes[Number(select.value)];
+                const index = Number(select.value);
+                if ((_a = reader.pos) === null || _a === void 0 ? void 0 : _a.boxes[index]) {
+                    reader.pos.mainbox = reader.pos.boxes[index];
                     showSelectedChat(reader.pos);
-                    updateSaveData({ chat: Number(select.value) });
+                    updateSaveData({ chat: index });
+                    console.log(`📌 Chat ${index} selecionado`);
                 }
             });
+            // Carregar chat salvo
             const savedChat = getSaveData("chat");
             if (savedChat !== false && reader.pos.boxes[Number(savedChat)]) {
                 reader.pos.mainbox = reader.pos.boxes[Number(savedChat)];
+                console.log(`💾 Chat salvo carregado: ${savedChat}`);
             }
             else if (reader.pos.boxes[0]) {
                 reader.pos.mainbox = reader.pos.boxes[0];
                 updateSaveData({ chat: 0 });
+                console.log(`📌 Chat 0 selecionado como padrão`);
             }
+            // Mostrar overlay
             if (reader.pos)
                 showSelectedChat(reader.pos);
+            // Mostrar itens e iniciar leitura
             showItems();
             setInterval(readChatbox, 600);
+            console.log("🔄 Leitura do chat iniciada");
         }
     }, 1000);
 }, 50);
+// ===== EVENT LISTENERS =====
 exportButton === null || exportButton === void 0 ? void 0 : exportButton.addEventListener("click", () => {
     const data = getSaveData("data") || [];
     const mode = getSaveData("mode");
-    let csv = mode === "total" ? "Item,Total,LOTD,HSR\n" : "Item,Quantity,Type,Date,Time\n";
-    let filename = mode === "total" ? "totals.csv" : "history.csv";
+    let csv = "";
+    let filename = "";
     if (mode === "total") {
+        csv = "Item,Total,LOTD,HSR\n";
+        filename = "luckydrops_totals.csv";
         const totals = {};
         data.forEach((item) => {
-            if (!totals[item.name])
+            if (!totals[item.name]) {
                 totals[item.name] = { total: 0, lotd: 0, hsr: 0 };
+            }
             totals[item.name].total += item.quantity;
             if (item.type === "LOTD")
                 totals[item.name].lotd += item.quantity;
             else if (item.type.includes("HSR"))
                 totals[item.name].hsr += item.quantity;
         });
-        Object.keys(totals).sort().forEach(n => csv += `${n},${totals[n].total},${totals[n].lotd},${totals[n].hsr}\n`);
+        Object.keys(totals).sort().forEach(name => {
+            csv += `${name},${totals[name].total},${totals[name].lotd},${totals[name].hsr}\n`;
+        });
     }
     else {
+        csv = "Item,Quantity,Type,Date,Time\n";
+        filename = "luckydrops_history.csv";
         data.forEach((item) => {
             const d = new Date(item.time);
             csv += `${item.name},${item.quantity},${item.type},${d.toLocaleDateString()},${d.toLocaleTimeString()}\n`;
@@ -347,41 +388,25 @@ function initPhrasesSystem() {
     console.log("🔧 Inicializando sistema de frases...");
     const phrasesTextarea = document.getElementById("customPhrases");
     const savePhrasesBtn = document.getElementById("savePhrases");
-    if (!phrasesTextarea) {
-        console.error("❌ Textarea 'customPhrases' não encontrado");
+    if (!phrasesTextarea || !savePhrasesBtn) {
+        console.error("❌ Elementos de frase não encontrados");
         return;
     }
-    if (!savePhrasesBtn) {
-        console.error("❌ Botão 'savePhrases' não encontrado");
-        return;
-    }
-    console.log("✅ Elementos encontrados");
     // Carregar frases salvas
-    try {
-        const savedPhrases = loadCustomPhrases();
-        phrasesTextarea.value = savedPhrases.join('\n');
-        console.log(`✅ ${savedPhrases.length} frases carregadas`);
-    }
-    catch (error) {
-        console.error("❌ Erro ao carregar:", error);
-        phrasesTextarea.value = DEFAULT_PHRASES.join('\n');
-    }
-    // IMPORTANTE: Não remover o botão! Apenas adicionar evento diretamente
-    savePhrasesBtn.onclick = function (event) {
+    phrasesTextarea.value = loadCustomPhrases().join('\n');
+    // Evento de salvamento
+    savePhrasesBtn.onclick = (event) => {
         event.preventDefault();
-        console.log("🖱️ Botão SAVE clicado!");
         const rawText = phrasesTextarea.value;
         const phrases = rawText.split('\n')
             .map(line => line.trim())
             .filter(line => line.length > 0);
-        console.log(`📝 Frases processadas: ${phrases.length}`);
         if (phrases.length === 0) {
             alert("⚠️ Please enter at least one phrase!");
             return;
         }
-        // Salvar usando a função
         saveCustomPhrases(phrases);
-        // Feedback visual simples
+        // Feedback visual
         const originalText = savePhrasesBtn.textContent;
         savePhrasesBtn.textContent = "✅ Saved!";
         savePhrasesBtn.style.backgroundColor = "#28a745";
@@ -390,9 +415,9 @@ function initPhrasesSystem() {
             savePhrasesBtn.style.backgroundColor = "";
         }, 1500);
     };
-    console.log("✅ Sistema de frases pronto!");
+    console.log("✅ Sistema de frases pronto");
 }
-// Inicializar quando a página carregar
+// Inicializar sistema de frases
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initPhrasesSystem);
 }
@@ -403,16 +428,24 @@ else {
 const webhookInput = document.getElementById("discordWebhook");
 if (webhookInput) {
     webhookInput.value = getSaveData("discordWebhook") || "";
-    webhookInput.addEventListener("change", () => updateSaveData({ discordWebhook: webhookInput.value }));
+    webhookInput.addEventListener("change", () => {
+        updateSaveData({ discordWebhook: webhookInput.value });
+    });
 }
-// ===== VERSION =====
-const VERSION = "2.0.0";
+// ===== VERSÃO =====
 const versionSpan = document.getElementById("version-number");
-if (versionSpan)
+if (versionSpan) {
     versionSpan.textContent = VERSION;
-// ===== INIT =====
+    console.log(`📌 Versão: ${VERSION}`);
+}
+// ===== INICIALIZAÇÃO DE DADOS =====
 if (!localStorage.getItem(appName)) {
-    localStorage.setItem(appName, JSON.stringify({ chat: 0, data: [], mode: "history" }));
+    localStorage.setItem(appName, JSON.stringify({
+        chat: 0,
+        data: [],
+        mode: "history"
+    }));
+    console.log("📦 Dados iniciais criados");
 }
 
 

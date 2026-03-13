@@ -23,7 +23,7 @@
                 <button class="nisbutton w-100" data-bs-toggle="modal" data-bs-target="#settings">⚙️ Settings</button>
                 <div class="row version-row">
                     <div class="col text-center">
-                        <small class="text-muted version-text">v <span id="version-number">1.0.1622</span></small>
+                        <small class="text-muted version-text">v <span id="version-number">1.0.19.46</span></small>
                     </div>
                 </div>
             </div>
@@ -99,9 +99,13 @@
                                 <summary>📝 Custom Phrases</summary>
                                 <div class="phrases-container">
                                     <textarea class="form-control phrases-textarea" id="customPhrases" rows="5" placeholder="Your Luck of the Dwarves shines brightly and you receive: (\d+) x (.+)&#10;Your Hazelmere's signet ring shines brightly. You receive: (\d+) x (.+)">Your Luck of the Dwarves shines brightly and you receive: (\d+) x (.+)
-Your Hazelmere's signet ring shines brightly. You receive: (\d+) x (.+)
-The power of Hazelmere blesses your drop and doubles it before your very eyes: (\d+) x (.+)</textarea>
-                                    <small class="text-muted d-block mt-1">Use (\d+) for quantity, (.+) for item name</small>
+                                        Your Hazelmere's signet ring shines brightly. You receive: (\d+) x (.+)
+                                        The power of Hazelmere blesses your drop and doubles it before your very eyes: (\d+) x (.+)
+                                    </textarea>
+                                    <small class="text-muted d-block mt-1">
+                                        Use (\d+) for quantity, (.+) for item name.<br>
+                                        e.g., The Seren Spirit gifts you: (\d+) x (.+)
+                                    </small>
                                     <button class="nisbutton w-100 mt-2" id="savePhrases">💾 Save Phrases</button>
                                 </div>
                             </details>
@@ -128,11 +132,19 @@ The power of Hazelmere blesses your drop and doubles it before your very eyes: (
                 </div>
 
                 <div class="modal-footer">
-                    <small class="text-muted">Based on ZeroGwafa's work</small>
+                    <small class="text-muted">
+                        Based on <a href="https://zerogwafa.github.io/SerenTracker/index.html" target="_blank">SerenTracker</a> & <a href="https://zerogwafa.github.io/ComponentCounter/index.html" target="_blank">ComponentCounter</a> by ZeroGwafa
+                    </small>
                 </div>
             </div>
         </div>
     </div>
-
+<script>
+    console.log("✅ HTML carregado");
+    window.onload = function() {
+        console.log("✅ Página totalmente carregada");
+    };
+</script>
+<script src="/dist/main.js"></script>
 <script src="main.js"></script></body>
 </html>

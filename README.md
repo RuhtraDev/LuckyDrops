@@ -124,7 +124,7 @@ Based on [SerenTracker](https://github.com/ZeroGwafa/SerenTracker) and [Componen
 ---
 
 ## 📦 Versão / Version
-**1.0.17.46**
+**1.0.19.46**
 
 ## 👤 Autor / Author
 **RuhtraDev**

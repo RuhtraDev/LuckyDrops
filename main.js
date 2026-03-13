@@ -4474,7 +4474,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_alt1_base__;
 (module) {
 
 "use strict";
-module.exports = /*#__PURE__*/JSON.parse('{"appName":"Lucky Drops","description":"Tracks Luck of the Dwarves and Hazelmere\'s Signet Ring drops","appUrl":"./index.html","configUrl":"./appconfig.json","iconUrl":"./assets/icon.png","defaultWidth":400,"defaultHeight":600,"minWidth":300,"minHeight":400,"maxWidth":800,"maxHeight":1000,"requestHandlers":[],"activators":[]}');
+module.exports = /*#__PURE__*/JSON.parse('{"appName":"luckydrops","description":"Tracks Luck of the Dwarves and Hazelmere\'s Signet Ring drops","appUrl":"./index.html","configUrl":"./appconfig.json","iconUrl":"./assets/icon.png","defaultWidth":400,"defaultHeight":600,"minWidth":300,"minHeight":400,"maxWidth":800,"maxHeight":1000,"requestHandlers":[],"activators":[]}');
 
 /***/ }
 

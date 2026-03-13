@@ -1,11 +1,9 @@
 import * as a1lib from "alt1";
 import ChatboxReader from "alt1/chatbox";
 
-
 import "./appconfig.json";
 import "./icon.png";
 
-// ===== DECLARAÇÃO GLOBAL DO ALT1 =====
 declare global {
     interface Window {
         alt1: any;
@@ -25,13 +23,41 @@ const timestampRegex = /\[\d{2}:\d{2}:\d{2}\]/g;
 const reader = new ChatboxReader();
 const appName = "LuckyDrops";
 
-// Configurar cores do chat
+// ===== CONFIGURAÇÃO DAS CORES COM TOLERÂNCIA =====
 reader.readargs = {
     colors: [
-        a1lib.mixColor(245, 124, 1),  // Laranja para LOTD
-        a1lib.mixColor(255, 215, 0)   // Dourado para HSR
+        // LOTD (laranja) - 3 variações
+        { r: [230, 245], g: [100, 115], b: [0, 5] },    // 235,104,2 e 240,112,0
+        // Usando range para capturar todas as variações de laranja do LOTD
+        
+        // Feixe (dourado) - 2 variações
+        { r: [190, 240], g: [120, 150], b: [0, 5] },    // 236,146,1 e 199,124,3
+        
+        // Hazelmere (laranja avermelhado) - 2 variações
+        { r: [240, 250], g: [70, 115], b: [0, 10] },    // 248,77,5 e 245,111,1
+        
+        // Seren (ciano) - 2 variações
+        { r: [0, 5], g: [235, 245], b: [235, 245] }     // 2,242,241 e 2,236,236
     ]
 };
+// ===== FIM DA CONFIGURAÇÃO DAS CORES =====
+
+// ===== FRASES PADRÃO (ÚNICAS, SEM REPETIÇÃO) =====
+const DEFAULT_PHRASES = [
+    // LOTD (2 variações)
+    "Your Luck of the Dwarves ring shines brightly. You receive: (\\d+) x (.+)",
+    "Your Luck of the Dwarves shines brightly and you receive: (\\d+) x (.+)",
+    
+    // FEIXE (1 frase)
+    "A golden beam shines over one of your items. You receive: (\\d+) x (.+)",
+    
+    // HAZELMERE (2 frases)
+    "Your Hazelmere's signet ring shines brightly. You receive: (\\d+) x (.+)",
+    "The power of Hazelmere blesses your drop and doubles it before your very eyes: (\\d+) x (.+)",
+    
+    // SEREN (1 frase - sem a parte do banco)
+    "The Seren spirit gifts you: (\\d+) x (.+)"
+];
 
 // Verificar se está no Alt1
 if (window.alt1) {

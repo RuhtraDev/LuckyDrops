@@ -1,0 +1,35 @@
+{
+  "name": "luckydrops",
+  "version": "2.0.0",
+  "description": "Tracks Luck of the Dwarves (LOTD) and Hazelmere's Signet Ring (HSR) drops",
+  "author": "Seu Nome (based on ZeroGwafa's SerenTracker)",
+  "license": "MIT",
+  "scripts": {
+    "build": "webpack",
+    "watch": "webpack --watch",
+    "serve": "webpack serve",
+    "deploy": "gh-pages -d dist"
+  },
+  "devDependencies": {
+    "@types/node": "^12.20.55",
+    "canvas": "^3.2.1",
+    "copy-webpack-plugin": "^14.0.0",
+    "css-loader": "^7.1.4",
+    "gh-pages": "^6.3.0",
+    "sharp": "^0.31.3",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.3",
+    "webpack": "^5.105.4",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-server": "^4.15.2"
+  },
+  "main": "main.js",
+  "keywords": [],
+  "type": "commonjs",
+  "dependencies": {
+    "@alt1/base": "^0.0.17",
+    "@alt1/chatbox": "^0.0.17",
+    "@alt1/ocr": "^0.0.17"
+  }
+}

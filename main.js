@@ -58,7 +58,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 var a1lib = __importStar(__webpack_require__(/*! alt1 */ "../node_modules/alt1/dist/base/index.js"));
 var chatbox_1 = __importDefault(__webpack_require__(/*! alt1/chatbox */ "../node_modules/alt1/dist/chatbox/index.js"));
-__webpack_require__(/*! ./index.html */ "./index.html");
 __webpack_require__(/*! ./appconfig.json */ "./appconfig.json");
 __webpack_require__(/*! ./icon.png */ "./icon.png");
 // Elementos DOM
@@ -361,16 +360,6 @@ listHeader.addEventListener("click", function () {
     }
 })();
 
-
-/***/ },
-
-/***/ "./index.html"
-/*!********************!*\
-  !*** ./index.html ***!
-  \********************/
-() {
-
-throw new Error("Module parse failed: Unexpected token (1:0)\nYou may need an appropriate loader to handle this file type, currently no loaders are configured to process this file. See https://webpack.js.org/concepts#loaders\n> <html>\n| \n| <head>");
 
 /***/ },
 

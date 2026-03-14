@@ -30,7 +30,7 @@
         </div>
     </div>
 
-    <!-- MODAL DE CONFIGURAÇÕES -->
+
     <div class="modal nis fade" id="settings" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -57,21 +57,30 @@
                     <div class="row mb-3">
                         <div class="col-12">
                             <div class="totals-container">
-                                <div><span class="totals-label">💎 LOTD:</span> <span class="totals-value" id="lotdCount">0</span></div>
-                                <div><span class="totals-label">👑 HSR:</span> <span class="totals-value" id="hazelmereCount">0</span></div>
+                                <div class="totals-item">
+                                    <div class="totals-emoji">💍</div>
+                                    <div class="totals-label">LOTD</div>
+                                    <div class="totals-value" id="lotdCount">0</div>
+                                </div>
+                                <div class="totals-item">
+                                    <div class="totals-emoji">🔱</div>
+                                    <div class="totals-label">HSR</div>
+                                    <div class="totals-value" id="hazelmereCount">0</div>
+                                </div>
+                                <div class="totals-item">
+                                    <div class="totals-emoji">✨</div>
+                                    <div class="totals-label">FEIXE</div>
+                                    <div class="totals-value" id="feixeCount">0</div>
+                                </div>
+                                <div class="totals-item">
+                                    <div class="totals-emoji">💎</div>
+                                    <div class="totals-label">SEREN</div>
+                                    <div class="totals-value" id="serenCount">0</div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Color Legend -->
-                    <div class="row mb-3">
-                        <div class="col-12">
-                            <div class="legend-container">
-                                <div><span class="lotd-color">█</span> LOTD</div>
-                                <div><span class="hazelmere-color">█</span> HSR</div>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Export CSV -->
                     <div class="row mb-3">
@@ -85,8 +94,14 @@
                         <div class="col-12">
                             <details class="webhook-details">
                                 <summary>🔔 Discord Webhook</summary>
-                                <div class="mt-2">
-                                    <input type="url" class="form-control" id="discordWebhook" placeholder="Discord webhook URL">
+                                <div class="webhook-container mt-2">
+                                    <div class="d-flex gap-2">
+                                        <input type="url" class="form-control flex-grow-1" id="discordWebhook" 
+                                            placeholder="https://discord.com/api/webhooks/...">
+                                        <button class="nisbutton" id="saveWebhookBtn">💾 Save</button>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">Get webhook URL from Discord channel settings</small>
+                                    <div id="webhookStatus" class="mt-1" style="font-size: 10px;"></div>
                                 </div>
                             </details>
                         </div>
@@ -98,13 +113,14 @@
                             <details class="phrases-details">
                                 <summary>📝 Custom Phrases</summary>
                                 <div class="phrases-container">
-                                    <textarea class="form-control phrases-textarea" id="customPhrases" rows="5" placeholder="Your Luck of the Dwarves shines brightly and you receive: (\d+) x (.+)&#10;Your Hazelmere's signet ring shines brightly. You receive: (\d+) x (.+)">Your Luck of the Dwarves shines brightly and you receive: (\d+) x (.+)
-                                        Your Hazelmere's signet ring shines brightly. You receive: (\d+) x (.+)
-                                        The power of Hazelmere blesses your drop and doubles it before your very eyes: (\d+) x (.+)
-                                    </textarea>
+                                    <textarea class="form-control phrases-textarea" id="customPhrases" rows="5" placeholder="Your Luck of the Dwarves shines brightly and you receive: (\d+) x (.+)">Your Luck of the Dwarves shines brightly and you receive: (\d+) x (.+)
+Your Hazelmere's signet ring shines brightly. You receive: (\d+) x (.+)
+The power of Hazelmere blesses your drop and doubles it before your very eyes: (\d+) x (.+)
+A golden beam shines over one of your items. You receive: (\d+) x (.+)
+The Seren spirit gifts you: (\d+) x (.+)</textarea>
                                     <small class="text-muted d-block mt-1">
                                         Use (\d+) for quantity, (.+) for item name.<br>
-                                        e.g., The Seren Spirit gifts you: (\d+) x (.+)
+                                        e.g., The Seren spirit gifts you: (\d+) x (.+)
                                     </small>
                                     <button class="nisbutton w-100 mt-2" id="savePhrases">💾 Save Phrases</button>
                                 </div>
@@ -112,21 +128,10 @@
                         </div>
                     </div>
 
-                    <!-- Factory Reset -->
+                    <!-- Drop Reset -->
                     <div class="row">
                         <div class="col-12">
-                            <button class="nisbutton w-100" data-type="reset" data-bs-toggle="collapse" href="#resetApp">⚠️ Factory Reset</button>
-                        </div>
-                    </div>
-                    <div class="row collapse mt-3" id="resetApp">
-                        <div class="col-12">
-                            <div class="alert alert-danger p-3">
-                                <p class="mb-2">Reset all data?</p>
-                                <div class="d-flex gap-2">
-                                    <button class="nisbutton flex-fill clear" data-bs-toggle="collapse" href="#resetApp">✅ Yes</button>
-                                    <button class="nisbutton flex-fill" data-bs-toggle="collapse" href="#resetApp">❌ No</button>
-                                </div>
-                            </div>
+                            <button class="nisbutton w-100" id="factoryResetBtn">⚠️ Reset Drops</button>
                         </div>
                     </div>
                 </div>

@@ -55,12 +55,39 @@ var __importStar = (this && this.__importStar) || (function () {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const a1lib = __importStar(__webpack_require__(/*! alt1 */ "../node_modules/alt1/dist/base/index.js"));
 const chatbox_1 = __importDefault(__webpack_require__(/*! alt1/chatbox */ "../node_modules/alt1/dist/chatbox/index.js"));
 __webpack_require__(/*! ./appconfig.json */ "./appconfig.json");
 __webpack_require__(/*! ./icon.png */ "./icon.png");
-// Elementos DOM
+// ===== CONSTS =====
+const APP_NAME = "LuckyDrops";
+const VERSION = "1.0.23.10";
+const timestampRegex = /\[\d{2}:\d{2}:\d{2}\]/g;
+// ===== VISUAL DEBUG =====
+const DEBUG_MODE = false; // Change to view log
+let debugDiv = null;
+if (DEBUG_MODE) {
+    debugDiv = document.createElement('div');
+    debugDiv.style.cssText = `
+        position: fixed; top: 200px; right: 50px; width: 300px; height: 500px;
+        background: rgba(0,0,0,0.9); color: #0f0; font-family: monospace;
+        font-size: 10px; padding: 5px; overflow-y: auto; z-index: 10000;
+        border: 2px solid #ffd700; border-radius: 5px;
+    `;
+    document.body.appendChild(debugDiv);
+}
+function debug(msg) {
+    console.log(msg);
+    if (DEBUG_MODE && debugDiv) {
+        const line = document.createElement('div');
+        line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        debugDiv.appendChild(line);
+        debugDiv.scrollTop = debugDiv.scrollHeight;
+    }
+}
+// ===== DOM ELEMENTS =====
 const itemList = document.querySelector(".itemList");
 const chatSelector = document.querySelector(".chat");
 const exportButton = document.querySelector(".export");
@@ -68,121 +95,158 @@ const clearButton = document.querySelector(".clear");
 const listHeader = document.querySelector(".header");
 const itemTotal = document.getElementById("total");
 const appColor = a1lib.mixColor(0, 255, 255);
-const timestampRegex = /\[\d{2}:\d{2}:\d{2}\]/g;
 const reader = new chatbox_1.default();
 const appName = "LuckyDrops";
-// ===== CONFIGURAÇÃO DAS CORES COM TOLERÂNCIA =====
+// ===== COLOR CONFIG =====
 reader.readargs = {
     colors: [
-        // LOTD (laranja) - 3 variações
-        { r: [230, 245], g: [100, 115], b: [0, 5] }, // 235,104,2 e 240,112,0
-        // Usando range para capturar todas as variações de laranja do LOTD
-        // Feixe (dourado) - 2 variações
-        { r: [190, 240], g: [120, 150], b: [0, 5] }, // 236,146,1 e 199,124,3
-        // Hazelmere (laranja avermelhado) - 2 variações
-        { r: [240, 250], g: [70, 115], b: [0, 10] }, // 248,77,5 e 245,111,1
-        // Seren (ciano) - 2 variações
-        { r: [0, 5], g: [235, 245], b: [235, 245] } // 2,242,241 e 2,236,236
+        a1lib.mixColor(255, 112, 0), // LOTD & HSR
+        a1lib.mixColor(245, 151, 0), // Feixe
+        a1lib.mixColor(0, 255, 255), // Seren
     ]
 };
-// ===== FIM DA CONFIGURAÇÃO DAS CORES =====
-// ===== FRASES PADRÃO (ÚNICAS, SEM REPETIÇÃO) =====
+// ===== UPDATE COUNT IN MODAL =====
+function updateCounters() {
+    const data = getSaveData("data") || [];
+    let lotd = 0, hsr = 0, feixe = 0, seren = 0;
+    data.forEach((item) => {
+        if (item.type === "LOTD")
+            lotd++;
+        else if (item.type.includes("HSR"))
+            hsr++;
+        else if (item.type === "FEIXE")
+            feixe++;
+        else if (item.type === "SEREN")
+            seren++;
+    });
+    const lotdEl = document.getElementById("lotdCount");
+    const hsrEl = document.getElementById("hazelmereCount");
+    const feixeEl = document.getElementById("feixeCount");
+    const serenEl = document.getElementById("serenCount");
+    if (lotdEl)
+        lotdEl.textContent = String(lotd);
+    if (hsrEl)
+        hsrEl.textContent = String(hsr);
+    if (feixeEl)
+        feixeEl.textContent = String(feixe);
+    if (serenEl)
+        serenEl.textContent = String(seren);
+}
+// ===== DEFAULT PHRASES =====
 const DEFAULT_PHRASES = [
-    // LOTD (2 variações)
-    "Your Luck of the Dwarves ring shines brightly. You receive: (\\d+) x (.+)",
-    "Your Luck of the Dwarves shines brightly and you receive: (\\d+) x (.+)",
-    // FEIXE (1 frase)
-    "A golden beam shines over one of your items. You receive: (\\d+) x (.+)",
-    // HAZELMERE (2 frases)
-    "Your Hazelmere's signet ring shines brightly. You receive: (\\d+) x (.+)",
-    "The power of Hazelmere blesses your drop and doubles it before your very eyes: (\\d+) x (.+)",
-    // SEREN (1 frase - sem a parte do banco)
-    "The Seren spirit gifts you: (\\d+) x (.+)"
+    // LOTD
+    "Your Luck of the Dwarves ring shines brightly. You receive: (\\d+) x (.*)",
+    "Your Luck of the Dwarves shines brightly and you receive: (\\d+) x (.*)",
+    // FEIXE (SÓ UMA VEZ!)
+    "A golden beam shines over one of your items. You receive: (\\d+) x (.*)",
+    // HAZELMERE
+    "Your Hazelmere's signet ring shines brightly. You receive: (\\d+) x (.*)",
+    "The power of Hazelmere blesses your drop and doubles it before your very eyes: (\\d+) x (.*)",
+    // SEREN
+    "The Seren spirit gifts you: (\\d+) x (.*)"
 ];
-// Verificar se está no Alt1
+// ===== DROPS RESET =====
+const factoryResetBtn = document.getElementById("factoryResetBtn");
+if (factoryResetBtn) {
+    const newBtn = factoryResetBtn.cloneNode(true);
+    (_a = factoryResetBtn.parentNode) === null || _a === void 0 ? void 0 : _a.replaceChild(newBtn, factoryResetBtn);
+    newBtn.addEventListener("click", function () {
+        debug("🖱️ Reset clicked!");
+        showConfirmModal("RESET DROP HISTORY?\n\n" +
+            "This will delete:\n" +
+            "• All drop history\n\n" +
+            "Saved phrases and webhook will NOT be affected.\n\n" +
+            "This cannot be undone!", () => {
+            debug("✅ User confirms");
+            // No change webhook e frases
+            const webhook = localStorage.getItem(`${APP_NAME}_webhook`);
+            const phrases = localStorage.getItem(`${APP_NAME}_phrases`);
+            localStorage.clear();
+            if (webhook)
+                localStorage.setItem(`${APP_NAME}_webhook`, webhook);
+            if (phrases)
+                localStorage.setItem(`${APP_NAME}_phrases`, phrases);
+            localStorage.setItem(APP_NAME, JSON.stringify({
+                chat: 0,
+                data: [],
+                mode: "history"
+            }));
+            sessionStorage.removeItem(`${APP_NAME}chatHistory`);
+            debug("✅ Drops erased! Webhook and phrases no changed.");
+            // Feedback
+            this.textContent = "✅ DROPS RESET!";
+            this.style.backgroundColor = "#28a745";
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        });
+    });
+}
+// ===== CHECK ALT1 =====
 if (window.alt1) {
     window.alt1.identifyAppUrl("./appconfig.json");
+    debug("✅ Alt1 detectado");
 }
 else {
-    let addappurl = `alt1://addapp/${new URL("./appconfig.json", document.location.href).href}`;
-    itemList.innerHTML = `<li>Alt1 not detected, click <a href='${addappurl}'>here</a> to add this app to Alt1</li>`;
+    itemList.innerHTML = `<li>Alt1 not detected. <a href="https://alt1.org">Get Alt1</a></li>`;
 }
-// ===== INICIALIZAÇÃO DO CHAT COM LOGS =====
-console.log("🚀 Iniciando Lucky Drops Tracker...");
-console.log("📡 Configuração do reader:", reader.readargs);
-window.setTimeout(function () {
-    console.log("🔍 Procurando chats...");
-    let tentativas = 0;
-    let findChat = setInterval(function () {
-        var _a;
-        tentativas++;
-        console.log(`⏳ Tentativa ${tentativas} de encontrar chat...`);
-        if (reader.pos === null) {
-            console.log("📡 reader.pos é null, executando reader.find()");
-            reader.find();
+// ===== BASICS FUNCTIONS =====
+function showSelectedChat(chat) {
+    var _a, _b;
+    if (!((_a = chat === null || chat === void 0 ? void 0 : chat.mainbox) === null || _a === void 0 ? void 0 : _a.rect))
+        return;
+    try {
+        (_b = window.alt1) === null || _b === void 0 ? void 0 : _b.overLayRect(appColor, chat.mainbox.rect.x, chat.mainbox.rect.y, chat.mainbox.rect.width, chat.mainbox.rect.height, 2000, 5);
+    }
+    catch (e) {
+        debug("Overlay error");
+    }
+}
+function updateChatHistory(chatLine) {
+    let history = sessionStorage.getItem(`${appName}chatHistory`) || "";
+    let lines = history ? history.split("\n") : [];
+    lines.push(chatLine);
+    while (lines.length > 100)
+        lines.shift();
+    sessionStorage.setItem(`${appName}chatHistory`, lines.join("\n"));
+}
+function isInHistory(chatLine) {
+    let history = sessionStorage.getItem(`${appName}chatHistory`);
+    return history ? history.split("\n").some(l => l.trim() === chatLine) : false;
+}
+function updateSaveData(...datasets) {
+    let current = JSON.parse(localStorage.getItem(appName) || "{}");
+    datasets.forEach(data => {
+        let key = Object.keys(data)[0];
+        let val = data[key];
+        if (key === "data") {
+            if (!current[key])
+                current[key] = [];
+            current[key].push(val);
         }
         else {
-            console.log("✅ Chat encontrado! reader.pos:", reader.pos);
-            clearInterval(findChat);
-            // Remover mensagem de loading
-            const loadingEl = document.querySelector(".item.loading");
-            if (loadingEl) {
-                console.log("🗑️ Removendo mensagem de loading");
-                loadingEl.remove();
-            }
-            if ((_a = reader.pos) === null || _a === void 0 ? void 0 : _a.boxes) {
-                console.log(`📋 Total de chats detectados: ${reader.pos.boxes.length}`);
-                // Popular dropdown
-                reader.pos.boxes.forEach((box, i) => {
-                    console.log(`📌 Chat ${i}:`, box);
-                    chatSelector.insertAdjacentHTML("beforeend", `<option value="${i}">Chat ${i}</option>`);
-                });
-                // Evento de mudança de chat
-                chatSelector.addEventListener("change", function () {
-                    console.log(`🖱️ Chat selecionado: ${this.value}`);
-                    reader.pos.mainbox = reader.pos.boxes[Number(this.value)];
-                    showSelectedChat(reader.pos);
-                    updateSaveData({ chat: Number(this.value) });
-                    this.value = "";
-                });
-                // Carregar chat salvo
-                const savedChat = getSaveData("chat");
-                console.log(`💾 Chat salvo anteriormente: ${savedChat}`);
-                if (savedChat && reader.pos.boxes[Number(savedChat)]) {
-                    reader.pos.mainbox = reader.pos.boxes[Number(savedChat)];
-                    console.log(`✅ Chat salvo carregado: ${savedChat}`);
-                }
-                else {
-                    reader.pos.mainbox = reader.pos.boxes[0];
-                    updateSaveData({ chat: 0 });
-                    console.log(`✅ Chat 0 selecionado como padrão`);
-                }
-                console.log("🟦 Mostrando overlay...");
-                showSelectedChat(reader.pos);
-                console.log("📊 Atualizando lista de itens...");
-                showItems();
-                console.log("🔄 Iniciando leitura do chat a cada 600ms");
-                setInterval(function () {
-                    console.log("📖 Lendo chat...");
-                    readChatbox();
-                }, 600);
-            }
-            else {
-                console.log("❌ reader.pos.boxes não encontrado!");
-            }
+            current[key] = val;
         }
-    }, 1000);
-}, 50);
-// Função principal de leitura do chat
+    });
+    localStorage.setItem(appName, JSON.stringify(current));
+}
+function getSaveData(key) {
+    var _a;
+    let data = JSON.parse(localStorage.getItem(appName) || "null");
+    return (_a = data === null || data === void 0 ? void 0 : data[key]) !== null && _a !== void 0 ? _a : false;
+}
+// ===== MAIN FUNCTION =====
 function readChatbox() {
-    const opts = reader.read() || [];
+    var _a, _b;
+    let opts = reader.read() || [];
     if (opts.length === 0)
         return;
+    debug(`📖 Lendo chat... ${opts.length} linhas`);
     let chatStr = "";
     for (let i = 0; i < opts.length; i++) {
-        if (!opts[i].text.match(timestampRegex) && i === 0)
+        if (!((_a = opts[i].text) === null || _a === void 0 ? void 0 : _a.match(timestampRegex)) && i === 0)
             continue;
-        if (opts[i].text.match(timestampRegex)) {
+        if ((_b = opts[i].text) === null || _b === void 0 ? void 0 : _b.match(timestampRegex)) {
             if (i > 0)
                 chatStr += "\n";
             chatStr += opts[i].text + " ";
@@ -191,166 +255,172 @@ function readChatbox() {
             chatStr += opts[i].text;
         }
     }
-    if (!chatStr.trim())
+    if (!chatStr.trim()) {
+        debug("⚠️ No line with timestamp");
         return;
-    const chatLines = chatStr.trim().split("\n");
-    // Carregar frases personalizadas do localStorage
-    let phrases = [];
-    const saved = localStorage.getItem(`${appName}_phrases`);
-    if (saved) {
-        try {
-            phrases = JSON.parse(saved);
-        }
-        catch (e) {
-            phrases = [];
-        }
     }
-    // Se não tiver frases salvas, usar padrão
-    if (phrases.length === 0) {
-        phrases = [
-            "Your Luck of the Dwarves ring shines brightly. You receive: (\\d+) x (.+)",
-            "Your Hazelmere's signet ring shines brightly. You receive: (\\d+) x (.+)",
-            "The power of Hazelmere blesses your drop and doubles it before your very eyes: (\\d+) x (.+)"
-        ];
-    }
-    chatLines.forEach(line => {
-        const chatLine = line.trim();
-        if (isInHistory(chatLine))
-            return;
-        // Testar cada frase salva
-        for (const phrase of phrases) {
-            // Escapar a frase para regex
-            const escaped = phrase
-                .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                .replace(/\\\(\\d\+\\\\\)/g, '(\\d+)')
-                .replace(/\\\(\.\+\\\\\)/g, '(.+)');
-            const regex = new RegExp(`\\[\\d{2}:\\d{2}:\\d{2}\\] ${escaped}`);
-            const match = chatLine.match(regex);
+    let chatLines = chatStr.trim().split("\n");
+    debug(`📝 ${chatLines.length} processeds lines`);
+    // ===== PROCESS EACH LINE =====
+    for (let line of chatLines) {
+        let chatLine = line.trim();
+        debug(`📄 Linha: "${chatLine.substring(0, 100)}${chatLine.length > 100 ? '...' : ''}"`);
+        if (isInHistory(chatLine)) {
+            debug(`⏭️ Já processada`);
+            continue;
+        }
+        let salvo = false;
+        // ===== 1. DETECTAR POR PALAVRAS-CHAVE (MAIS FLEXÍVEL) =====
+        // LOTD
+        if (!salvo && chatLine.includes("Luck") && chatLine.includes("Dwarves")) {
+            debug("💍 LOTD detectado por palavra-chave");
+            let match = chatLine.match(/receive:? (\d+) x (.*)/i);
             if (match) {
-                const quantity = parseInt(match[1]);
-                const itemName = match[2].trim();
-                // Determinar o tipo baseado na frase
-                let dropType = "CUSTOM";
-                if (phrase.includes("Luck of the Dwarves"))
-                    dropType = "LOTD";
-                else if (phrase.includes("Hazelmere")) {
-                    dropType = phrase.includes("doubles") ? "HSR_DOUBLE" : "HSR";
-                }
-                const dropItem = {
-                    item: `${quantity} x ${itemName}`,
-                    quantity: quantity,
-                    name: itemName,
-                    type: dropType,
+                let qty = parseInt(match[1]);
+                let item = match[2].trim();
+                let dropItem = {
+                    item: `${qty} x ${item}`,
+                    quantity: qty,
+                    name: item,
+                    type: "LOTD",
                     time: new Date(),
-                    chatLine: chatLine
+                    chatLine
                 };
-                console.log(`${dropType} drop:`, dropItem);
                 updateSaveData({ data: dropItem });
                 updateChatHistory(chatLine);
                 showItems();
-                break;
+                sendDiscordNotification(dropItem);
+                debug(`💾 LOTD SALVO! ${qty} x ${item}`);
+                salvo = true;
             }
         }
-    });
-}
-// Funções auxiliares
-function updateChatHistory(chatLine) {
-    const history = sessionStorage.getItem(`${appName}chatHistory`) || "";
-    const lines = history ? history.split("\n") : [];
-    lines.push(chatLine);
-    while (lines.length > 100)
-        lines.shift();
-    sessionStorage.setItem(`${appName}chatHistory`, lines.join("\n"));
-}
-function isInHistory(chatLine) {
-    const history = sessionStorage.getItem(`${appName}chatHistory`);
-    if (!history)
-        return false;
-    return history.split("\n").some(line => line.trim() === chatLine);
-}
-function showSelectedChat(chat) {
-    var _a;
-    if (!((_a = chat === null || chat === void 0 ? void 0 : chat.mainbox) === null || _a === void 0 ? void 0 : _a.rect))
-        return;
-    try {
-        window.alt1.overLayRect(appColor, chat.mainbox.rect.x, chat.mainbox.rect.y, chat.mainbox.rect.width, chat.mainbox.rect.height, 2000, 5);
-    }
-    catch (e) {
-        console.log("Overlay not available");
+        // FEIXE
+        if (!salvo && chatLine.includes("golden") && chatLine.includes("beam")) {
+            debug("✨ FEIXE detectado por palavra-chave");
+            let match = chatLine.match(/receive:? (\d+) x (.*)/i);
+            if (match) {
+                let qty = parseInt(match[1]);
+                let item = match[2].trim();
+                let dropItem = {
+                    item: `${qty} x ${item}`,
+                    quantity: qty,
+                    name: item,
+                    type: "FEIXE",
+                    time: new Date(),
+                    chatLine
+                };
+                updateSaveData({ data: dropItem });
+                updateChatHistory(chatLine);
+                showItems();
+                sendDiscordNotification(dropItem);
+                debug(`💾 FEIXE SALVO! ${qty} x ${item}`);
+                salvo = true;
+            }
+        }
+        // SEREN
+        if (!salvo && chatLine.includes("Seren") && chatLine.includes("spirit")) {
+            debug("💎 SEREN detectado por palavra-chave");
+            let match = chatLine.match(/gifts you:? (\d+) x (.*)/i);
+            if (match) {
+                let qty = parseInt(match[1]);
+                let item = match[2].trim();
+                item = item.replace(/\.?\s*The gift is sent to your bank\.?$/i, '');
+                let dropItem = {
+                    item: `${qty} x ${item}`,
+                    quantity: qty,
+                    name: item,
+                    type: "SEREN",
+                    time: new Date(),
+                    chatLine
+                };
+                updateSaveData({ data: dropItem });
+                updateChatHistory(chatLine);
+                showItems();
+                sendDiscordNotification(dropItem);
+                debug(`💾 SEREN SALVO! ${qty} x ${item}`);
+                salvo = true;
+            }
+        }
+        // HAZELMERE
+        if (!salvo && chatLine.includes("Hazelmere")) {
+            debug("🔱 HAZELMERE detectado por palavra-chave");
+            let match = chatLine.match(/receive:? (\d+) x (.*)/i);
+            if (match) {
+                let qty = parseInt(match[1]);
+                let item = match[2].trim();
+                let type = chatLine.includes("doubles") ? "HSR_DOUBLE" : "HSR";
+                let dropItem = {
+                    item: `${qty} x ${item}`,
+                    quantity: qty,
+                    name: item,
+                    type: type,
+                    time: new Date(),
+                    chatLine
+                };
+                updateSaveData({ data: dropItem });
+                updateChatHistory(chatLine);
+                showItems();
+                sendDiscordNotification(dropItem);
+                debug(`💾 HAZELMERE SALVO! ${qty} x ${item}`);
+                salvo = true;
+            }
+        }
+        // ===== 2. SE NÃO DETECTOU POR PALAVRA, TENTA FRASES PERSONALIZADAS =====
+        if (!salvo) {
+            let phrases = JSON.parse(localStorage.getItem(`${appName}_phrases`) || "null") || DEFAULT_PHRASES;
+            for (let phrase of phrases) {
+                // Cria regex da frase
+                let pattern = phrase
+                    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                    .replace(/\\\(\\d\+\\\\\)/g, '(\\d+)')
+                    .replace(/\\\(\.\+\\\\\)/g, '(.*)');
+                let regex = new RegExp(`\\[\\d{2}:\\d{2}:\\d{2}\\] ${pattern}`);
+                let match = chatLine.match(regex);
+                if (match) {
+                    let type = "CUSTOM";
+                    if (phrase.includes("Luck"))
+                        type = "LOTD";
+                    else if (phrase.includes("Hazelmere"))
+                        type = phrase.includes("doubles") ? "HSR_DOUBLE" : "HSR";
+                    else if (phrase.includes("golden"))
+                        type = "FEIXE";
+                    else if (phrase.includes("Seren"))
+                        type = "SEREN";
+                    let qty = parseInt(match[1]);
+                    let item = match[2].trim();
+                    debug(`🎉 DROP por frase! ${type}: ${qty} x ${item}`);
+                    let dropItem = {
+                        item: `${qty} x ${item}`,
+                        quantity: qty,
+                        name: item,
+                        type: type,
+                        time: new Date(),
+                        chatLine
+                    };
+                    updateSaveData({ data: dropItem });
+                    updateChatHistory(chatLine);
+                    showItems();
+                    salvo = true;
+                    break;
+                }
+            }
+        }
+        if (!salvo) {
+            debug(`ℹ️ Nenhum drop detectado nesta linha`);
+        }
     }
 }
 function showItems() {
     if (!itemList)
         return;
-    // Remove itens antigos (exceto header e total)
     itemList.querySelectorAll("li.item:not(.header):not(.total)").forEach(el => el.remove());
-    const data = getSaveData("data") || [];
-    if (itemTotal)
-        itemTotal.innerHTML = String(data.length);
-    const mode = getSaveData("mode");
+    let data = getSaveData("data") || [];
+    itemTotal.innerHTML = String(data.length);
+    let mode = getSaveData("mode");
     if (mode === "total") {
         listHeader.innerHTML = "Drop Totals";
         listHeader.dataset.show = "history";
-        const totals = {};
-        data.forEach((item) => {
-            if (!totals[item.name]) {
-                totals[item.name] = { total: 0, lotd: 0, hsr: 0 };
-            }
-            totals[item.name].total += item.quantity;
-            if (item.type === "LOTD")
-                totals[item.name].lotd += item.quantity;
-            else if (item.type.includes("HSR"))
-                totals[item.name].hsr += item.quantity;
-        });
-        Object.keys(totals).sort().forEach(name => {
-            const t = totals[name];
-            itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item">${name}: ${t.total} (💎: ${t.lotd} | 👑: ${t.hsr})</li>`);
-        });
-    }
-    else {
-        listHeader.innerHTML = "Drop History";
-        listHeader.dataset.show = "total";
-        data.slice().reverse().forEach((item) => {
-            const icon = item.type === "LOTD" ? "💎" : item.type.includes("HSR") ? "👑" : "📦";
-            itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item" title="${new Date(item.time).toLocaleString()} - ${item.type}">${icon} ${item.item}</li>`);
-        });
-    }
-}
-// Funções de salvamento
-function updateSaveData(...datasets) {
-    const current = JSON.parse(localStorage.getItem(appName) || "{}");
-    datasets.forEach(data => {
-        const key = Object.keys(data)[0];
-        const value = data[key];
-        if (key === "data") {
-            if (!current[key])
-                current[key] = [];
-            if (!Array.isArray(value))
-                current[key].push(value);
-            else
-                current[key] = value;
-        }
-        else {
-            current[key] = value;
-        }
-    });
-    localStorage.setItem(appName, JSON.stringify(current));
-}
-function getSaveData(key) {
-    var _a;
-    const data = JSON.parse(localStorage.getItem(appName) || "null");
-    return (_a = data === null || data === void 0 ? void 0 : data[key]) !== null && _a !== void 0 ? _a : false;
-}
-// Event Listeners
-exportButton === null || exportButton === void 0 ? void 0 : exportButton.addEventListener("click", () => {
-    const data = getSaveData("data") || [];
-    const mode = getSaveData("mode");
-    let csv = "";
-    let filename = "";
-    if (mode === "total") {
-        csv = "Item,Total,LOTD,HSR\n";
-        filename = "luckydrops_totals.csv";
-        const totals = {};
+        let totals = {};
         data.forEach((item) => {
             if (!totals[item.name])
                 totals[item.name] = { total: 0, lotd: 0, hsr: 0 };
@@ -360,87 +430,294 @@ exportButton === null || exportButton === void 0 ? void 0 : exportButton.addEven
             else if (item.type.includes("HSR"))
                 totals[item.name].hsr += item.quantity;
         });
-        Object.keys(totals).sort().forEach(name => {
-            csv += `${name},${totals[name].total},${totals[name].lotd},${totals[name].hsr}\n`;
+        Object.keys(totals).sort().forEach(n => {
+            let t = totals[n];
+            itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item">${n}: ${t.total} (💍:${t.lotd} | 🔱:${t.hsr})</li>`);
         });
     }
     else {
-        csv = "Item,Quantity,Type,Date,Time\n";
-        filename = "luckydrops_history.csv";
-        data.forEach((item) => {
-            const d = new Date(item.time);
-            csv += `${item.name},${item.quantity},${item.type},${d.toLocaleDateString()},${d.toLocaleTimeString()}\n`;
+        listHeader.innerHTML = "Drop History";
+        listHeader.dataset.show = "total";
+        data.slice().reverse().forEach((item) => {
+            let icon = item.type === "LOTD" ? "💍" : item.type.includes("HSR") ? "🔱" : "✨";
+            itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item" title="${new Date(item.time).toLocaleString()}">${icon} ${item.item}</li>`);
         });
     }
-    const blob = new Blob([csv], { type: "text/csv" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    link.click();
-});
-clearButton === null || clearButton === void 0 ? void 0 : clearButton.addEventListener("click", () => {
-    if (confirm("Reset all data?")) {
-        localStorage.removeItem(appName);
-        sessionStorage.removeItem(`${appName}chatHistory`);
-        location.reload();
+    updateCounters();
+}
+// ===== INICIALIZAÇÃO DO CHAT (IGUAL ZEROGWAFA) =====
+window.setTimeout(() => {
+    let findChat = setInterval(() => {
+        var _a, _b;
+        if (!reader.pos) {
+            reader.find();
+            return;
+        }
+        clearInterval(findChat);
+        debug("✅ Chat encontrado!");
+        (_a = document.querySelector(".item.loading")) === null || _a === void 0 ? void 0 : _a.remove();
+        if ((_b = reader.pos) === null || _b === void 0 ? void 0 : _b.boxes) {
+            reader.pos.boxes.forEach((_, i) => {
+                chatSelector.insertAdjacentHTML("beforeend", `<option value="${i}">Chat ${i}</option>`);
+            });
+            chatSelector.addEventListener("change", function () {
+                var _a;
+                let idx = Number(this.value);
+                if ((_a = reader.pos) === null || _a === void 0 ? void 0 : _a.boxes[idx]) {
+                    reader.pos.mainbox = reader.pos.boxes[idx];
+                    showSelectedChat(reader.pos);
+                    updateSaveData({ chat: idx });
+                }
+            });
+            let savedChat = getSaveData("chat");
+            reader.pos.mainbox = savedChat ? reader.pos.boxes[Number(savedChat)] : reader.pos.boxes[0];
+            updateSaveData({ chat: savedChat || 0 });
+            showSelectedChat(reader.pos);
+            showItems();
+            setInterval(readChatbox, 600);
+            debug("🔄 Leitura iniciada");
+        }
+    }, 1000);
+}, 50);
+// ===== EVENT LISTENERS =====
+exportButton === null || exportButton === void 0 ? void 0 : exportButton.addEventListener("click", () => {
+    let data = getSaveData("data") || [];
+    let mode = getSaveData("mode");
+    let csv = mode === "total" ? "Item,Total,LOTD,HSR\n" : "Item,Quantity,Type,Date,Time\n";
+    let file = mode === "total" ? "totals.csv" : "history.csv";
+    if (mode === "total") {
+        let totals = {};
+        data.forEach((i) => {
+            if (!totals[i.name])
+                totals[i.name] = { total: 0, lotd: 0, hsr: 0 };
+            totals[i.name].total += i.quantity;
+            if (i.type === "LOTD")
+                totals[i.name].lotd += i.quantity;
+            else if (i.type.includes("HSR"))
+                totals[i.name].hsr += i.quantity;
+        });
+        Object.keys(totals).sort().forEach(n => csv += `${n},${totals[n].total},${totals[n].lotd},${totals[n].hsr}\n`);
     }
+    else {
+        data.forEach((i) => {
+            let d = new Date(i.time);
+            csv += `${i.name},${i.quantity},${i.type},${d.toLocaleDateString()},${d.toLocaleTimeString()}\n`;
+        });
+    }
+    let blob = new Blob([csv], { type: "text/csv" });
+    let link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = file;
+    link.click();
 });
 listHeader === null || listHeader === void 0 ? void 0 : listHeader.addEventListener("click", () => {
     updateSaveData({ mode: listHeader.dataset.show });
     showItems();
 });
-// Inicialização de dados
-if (!localStorage.getItem(appName)) {
-    localStorage.setItem(appName, JSON.stringify({ chat: 0, data: [], mode: "history" }));
-}
-// ===== CUSTOM PHRASES (estilo ZeroGwafa) =====
-const phrasesTextarea = document.getElementById("customPhrases");
-const savePhrasesBtn = document.getElementById("savePhrases");
-// Carregar frases salvas
-function loadSavedPhrases() {
-    const saved = localStorage.getItem(`${appName}_phrases`);
-    if (saved && phrasesTextarea) {
+// ===== FRASES PERSONALIZADAS =====
+let phrasesTextarea = document.getElementById("customPhrases");
+let saveBtn = document.getElementById("savePhrases");
+if (phrasesTextarea && saveBtn) {
+    let saved = localStorage.getItem(`${appName}_phrases`);
+    if (saved) {
         try {
             phrasesTextarea.value = JSON.parse(saved).join('\n');
-            console.log("✅ Frases carregadas do localStorage");
         }
         catch (e) {
-            console.log("⚠️ Erro ao carregar frases");
+            debug("Erro frases");
         }
     }
-}
-// Salvar frases
-if (savePhrasesBtn && phrasesTextarea) {
-    // Carregar ao iniciar
-    loadSavedPhrases();
-    // Evento de clique
-    savePhrasesBtn.addEventListener("click", function () {
-        const phrases = phrasesTextarea.value
-            .split('\n')
-            .map(p => p.trim())
-            .filter(p => p.length > 0);
-        if (phrases.length > 0) {
+    saveBtn.addEventListener("click", () => {
+        let phrases = phrasesTextarea.value.split('\n').map(p => p.trim()).filter(p => p);
+        if (phrases.length) {
             localStorage.setItem(`${appName}_phrases`, JSON.stringify(phrases));
-            // Feedback visual
-            const originalText = savePhrasesBtn.textContent;
-            savePhrasesBtn.textContent = "✅ Saved!";
-            savePhrasesBtn.style.backgroundColor = "#28a745";
+            saveBtn.textContent = "✅ Saved!";
+            saveBtn.style.backgroundColor = "#28a745";
             setTimeout(() => {
-                savePhrasesBtn.textContent = originalText;
-                savePhrasesBtn.style.backgroundColor = "";
+                saveBtn.textContent = "💾 Save Phrases";
+                saveBtn.style.backgroundColor = "";
             }, 1500);
-            console.log(`✅ ${phrases.length} frases salvas`);
-        }
-        else {
-            alert("Please enter at least one phrase");
+            debug(`✅ ${phrases.length} frases salvas`);
         }
     });
 }
-// Versão
-const versionSpan = document.getElementById("version-number");
-if (versionSpan) {
-    versionSpan.textContent = "1.0.23.10";
+// ===== DISCORD WEBHOOK =====
+const webhookInput = document.getElementById("discordWebhook");
+const saveWebhookBtn = document.getElementById("saveWebhookBtn");
+const webhookStatus = document.getElementById("webhookStatus");
+function loadWebhook() {
+    const saved = localStorage.getItem(`${appName}_webhook`);
+    if (saved && webhookInput) {
+        webhookInput.value = saved;
+        updateWebhookStatus("✅ Webhook carregado");
+    }
 }
+function saveWebhook() {
+    if (!webhookInput)
+        return;
+    const url = webhookInput.value.trim();
+    if (!url) {
+        updateWebhookStatus("⚠️ Please enter a webhook URL", true);
+        return;
+    }
+    if (!url.startsWith("https://discord.com/api/webhooks/")) {
+        updateWebhookStatus("❌ Invalid Discord webhook URL", true);
+        return;
+    }
+    // Salvar no localStorage
+    localStorage.setItem(`${appName}_webhook`, url);
+    // Feedback visual
+    webhookInput.style.backgroundColor = "#28a745";
+    updateWebhookStatus("✅ Webhook saved successfully!");
+    // Testar o webhook (opcional)
+    testWebhook(url);
+    setTimeout(() => {
+        if (webhookInput)
+            webhookInput.style.backgroundColor = "";
+    }, 1000);
+}
+function testWebhook(url) {
+    fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            username: "Lucky Drops",
+            content: "🔔 Webhook configured successfully!"
+        })
+    })
+        .then(res => {
+        if (res.ok)
+            updateWebhookStatus("✅ Test message sent to Discord!");
+        else
+            updateWebhookStatus("❌ Test failed: " + res.status, true);
+    })
+        .catch(err => updateWebhookStatus("❌ Test error: " + err.message, true));
+}
+function updateWebhookStatus(msg, isError = false) {
+    if (webhookStatus) {
+        webhookStatus.textContent = msg;
+        webhookStatus.style.color = isError ? "#ff6b6b" : "#0f0";
+        setTimeout(() => {
+            webhookStatus.textContent = "";
+        }, 3000);
+    }
+    debug(msg);
+}
+if (webhookInput) {
+    loadWebhook();
+}
+// Evento do botão salvar
+if (saveWebhookBtn) {
+    saveWebhookBtn.addEventListener("click", saveWebhook);
+}
+// Também salvar com Enter
+if (webhookInput) {
+    webhookInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter")
+            saveWebhook();
+    });
+}
+// ===== FUNÇÃO PARA ENVIAR NOTIFICAÇÃO =====
+function sendDiscordNotification(dropItem) {
+    const webhook = localStorage.getItem(`${appName}_webhook`);
+    if (!webhook)
+        return;
+    const emoji = dropItem.type === "LOTD" ? "💍" :
+        dropItem.type.includes("HSR") ? "🔱" :
+            dropItem.type === "FEIXE" ? "✨" :
+                dropItem.type === "SEREN" ? "💎" : "📦";
+    const message = {
+        username: "Lucky Drops Tracker",
+        content: `${emoji} **${dropItem.type}** - ${dropItem.item} at ${new Date().toLocaleString()}`
+    };
+    fetch(webhook, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(message)
+    })
+        .then(res => {
+        if (res.ok)
+            debug("✅ Discord notification sent");
+        else
+            debug(`❌ Discord error: ${res.status}`);
+    })
+        .catch(err => debug(`❌ Discord error: ${err.message}`));
+}
+// ===== CONFIRM PERSONALIZADO =====
+function showConfirmModal(message, onConfirm) {
+    var _a, _b;
+    // Remove modal antigo se existir
+    const oldModal = document.getElementById("customConfirmModal");
+    if (oldModal)
+        oldModal.remove();
+    // Cria o modal
+    const modal = document.createElement('div');
+    modal.id = "customConfirmModal";
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 50000;
+    `;
+    const content = document.createElement('div');
+    content.style.cssText = `
+        background: #1a1a1a;
+        border: 3px solid #ffd700;
+        border-radius: 10px;
+        padding: 25px;
+        max-width: 400px;
+        text-align: center;
+        color: white;
+        font-family: 'trajan-pro-3';
+        box-shadow: 0 0 20px rgba(255,215,0,0.3);
+    `;
+    content.innerHTML = `
+        <div style="font-size: 24px; margin-bottom: 15px;">⚠️ WARNING</div>
+        <div style="margin-bottom: 25px; font-size: 14px; white-space: pre-line;">${message}</div>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button class="nisbutton" id="confirmYes" style="background: #28a745; border-color: #ffd700;">✅ YES</button>
+            <button class="nisbutton" id="confirmNo" style="background: #dc3545; border-color: #ffd700;">❌ NO</button>
+        </div>
+    `;
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+    // Botão YES
+    (_a = document.getElementById("confirmYes")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
+        modal.remove();
+        onConfirm();
+    });
+    // Botão NO
+    (_b = document.getElementById("confirmNo")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
+        modal.remove();
+        debug("❌ Usuário cancelou");
+    });
+}
+// ===== RESET MANUAL =====
+let resetBtn = document.createElement('button');
+resetBtn.className = 'nisbutton w-100';
+resetBtn.textContent = '🔄 Reset Reader';
+resetBtn.style.marginTop = '10px';
+(_b = document.querySelector('.modal-body')) === null || _b === void 0 ? void 0 : _b.appendChild(resetBtn);
+resetBtn.addEventListener('click', () => {
+    reader.pos = null;
+    reader.find();
+    debug("🔄 Reader resetado");
+});
+// ===== VERSÃO =====
+let versionSpan = document.getElementById("version-number");
+if (versionSpan)
+    versionSpan.textContent = VERSION;
+// ===== INIT =====
+if (!localStorage.getItem(appName)) {
+    localStorage.setItem(appName, JSON.stringify({ chat: 0, data: [], mode: "history" }));
+}
+debug("✅ Inicializado");
 
 
 /***/ },

@@ -55,7 +55,7 @@ var __importStar = (this && this.__importStar) || (function () {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _a, _b;
+var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const a1lib = __importStar(__webpack_require__(/*! alt1 */ "../node_modules/alt1/dist/base/index.js"));
 const chatbox_1 = __importDefault(__webpack_require__(/*! alt1/chatbox */ "../node_modules/alt1/dist/chatbox/index.js"));
@@ -63,7 +63,6 @@ __webpack_require__(/*! ./appconfig.json */ "./appconfig.json");
 __webpack_require__(/*! ./icon.png */ "./icon.png");
 // ===== CONSTS =====
 const APP_NAME = "LuckyDrops";
-const VERSION = "1.0.23.10";
 const timestampRegex = /\[\d{2}:\d{2}:\d{2}\]/g;
 // ===== VISUAL DEBUG =====
 const DEBUG_MODE = false; // Change to view log
@@ -131,6 +130,32 @@ function updateCounters() {
         feixeEl.textContent = String(feixe);
     if (serenEl)
         serenEl.textContent = String(seren);
+}
+// ===== CACHE DE DROPS POR MINUTO =====
+const dropsCache = new Map(); // Guarda também o tipo
+// Limpa o cache a cada 2 minutos
+setInterval(() => {
+    dropsCache.clear();
+    debug("🧹 Cache de drops limpo");
+}, 120000);
+// ===== FUNÇÃO PARA VERIFICAR SE DROP JÁ EXISTE =====
+function isDuplicateDrop(itemName, chatLine, currentType) {
+    // Extrai o timestamp
+    let timeMatch = chatLine.match(/\[(\d{2}:\d{2}:\d{2})\]/);
+    if (!timeMatch)
+        return false;
+    let currentTime = timeMatch[1];
+    let minuteKey = currentTime.substring(0, 5); // HH:MM
+    let cacheKey = `${itemName}:${minuteKey}`;
+    // Verifica no cache
+    if (dropsCache.has(cacheKey)) {
+        let cached = dropsCache.get(cacheKey);
+        debug(`🔍 Cache: ${itemName} já registrado como ${cached === null || cached === void 0 ? void 0 : cached.type} às ${minuteKey}`);
+        return true;
+    }
+    // Se não está no cache, adiciona
+    dropsCache.set(cacheKey, { type: currentType, time: currentTime });
+    return false;
 }
 // ===== DEFAULT PHRASES =====
 const DEFAULT_PHRASES = [
@@ -241,7 +266,7 @@ function readChatbox() {
     let opts = reader.read() || [];
     if (opts.length === 0)
         return;
-    debug(`📖 Lendo chat... ${opts.length} linhas`);
+    debug(`📖 Lendo chat... ${opts.length} line`);
     let chatStr = "";
     for (let i = 0; i < opts.length; i++) {
         if (!((_a = opts[i].text) === null || _a === void 0 ? void 0 : _a.match(timestampRegex)) && i === 0)
@@ -264,105 +289,129 @@ function readChatbox() {
     // ===== PROCESS EACH LINE =====
     for (let line of chatLines) {
         let chatLine = line.trim();
-        debug(`📄 Linha: "${chatLine.substring(0, 100)}${chatLine.length > 100 ? '...' : ''}"`);
+        debug(`📄 Line: "${chatLine.substring(0, 100)}${chatLine.length > 100 ? '...' : ''}"`);
         if (isInHistory(chatLine)) {
-            debug(`⏭️ Já processada`);
+            debug(`⏭️ Processed`);
             continue;
         }
         let salvo = false;
         // ===== 1. DETECTAR POR PALAVRAS-CHAVE (MAIS FLEXÍVEL) =====
         // LOTD
         if (!salvo && chatLine.includes("Luck") && chatLine.includes("Dwarves")) {
-            debug("💍 LOTD detectado por palavra-chave");
+            debug("💍 LOTD detected");
             let match = chatLine.match(/receive:? (\d+) x (.*)/i);
             if (match) {
                 let qty = parseInt(match[1]);
                 let item = match[2].trim();
-                let dropItem = {
-                    item: `${qty} x ${item}`,
-                    quantity: qty,
-                    name: item,
-                    type: "LOTD",
-                    time: new Date(),
-                    chatLine
-                };
-                updateSaveData({ data: dropItem });
-                updateChatHistory(chatLine);
-                showItems();
-                sendDiscordNotification(dropItem);
-                debug(`💾 LOTD SALVO! ${qty} x ${item}`);
-                salvo = true;
+                if (isDuplicateDrop(item, chatLine, "LOTD")) {
+                    debug(`⏭️ Drop duplicated (LOTD): ${item}`);
+                    salvo = true;
+                }
+                else {
+                    let dropItem = {
+                        item: `${qty} x ${item}`,
+                        quantity: qty,
+                        name: item,
+                        type: "LOTD",
+                        time: new Date(),
+                        chatLine
+                    };
+                    updateSaveData({ data: dropItem });
+                    updateChatHistory(chatLine);
+                    showItems();
+                    sendDiscordNotification(dropItem);
+                    debug(`💾 LOTD SAVE! ${qty} x ${item}`);
+                    salvo = true;
+                }
             }
         }
         // FEIXE
         if (!salvo && chatLine.includes("golden") && chatLine.includes("beam")) {
-            debug("✨ FEIXE detectado por palavra-chave");
+            debug("✨ BEAM detectado");
             let match = chatLine.match(/receive:? (\d+) x (.*)/i);
             if (match) {
                 let qty = parseInt(match[1]);
                 let item = match[2].trim();
-                let dropItem = {
-                    item: `${qty} x ${item}`,
-                    quantity: qty,
-                    name: item,
-                    type: "FEIXE",
-                    time: new Date(),
-                    chatLine
-                };
-                updateSaveData({ data: dropItem });
-                updateChatHistory(chatLine);
-                showItems();
-                sendDiscordNotification(dropItem);
-                debug(`💾 FEIXE SALVO! ${qty} x ${item}`);
-                salvo = true;
+                if (isDuplicateDrop(item, chatLine, "BEAM")) {
+                    debug(`⏭️ Drop duplicated (BEAM): ${item}`);
+                    salvo = true;
+                }
+                else {
+                    let dropItem = {
+                        item: `${qty} x ${item}`,
+                        quantity: qty,
+                        name: item,
+                        type: "BEAM",
+                        time: new Date(),
+                        chatLine
+                    };
+                    updateSaveData({ data: dropItem });
+                    updateChatHistory(chatLine);
+                    showItems();
+                    sendDiscordNotification(dropItem);
+                    debug(`💾 BEAM SAVE! ${qty} x ${item}`);
+                    salvo = true;
+                }
             }
         }
         // SEREN
         if (!salvo && chatLine.includes("Seren") && chatLine.includes("spirit")) {
-            debug("💎 SEREN detectado por palavra-chave");
+            debug("💎 SEREN detected");
             let match = chatLine.match(/gifts you:? (\d+) x (.*)/i);
             if (match) {
                 let qty = parseInt(match[1]);
                 let item = match[2].trim();
                 item = item.replace(/\.?\s*The gift is sent to your bank\.?$/i, '');
-                let dropItem = {
-                    item: `${qty} x ${item}`,
-                    quantity: qty,
-                    name: item,
-                    type: "SEREN",
-                    time: new Date(),
-                    chatLine
-                };
-                updateSaveData({ data: dropItem });
-                updateChatHistory(chatLine);
-                showItems();
-                sendDiscordNotification(dropItem);
-                debug(`💾 SEREN SALVO! ${qty} x ${item}`);
-                salvo = true;
+                if (isDuplicateDrop(item, chatLine, "SEREN")) {
+                    debug(`⏭️ Drop duplicated (SEREN): ${item}`);
+                    salvo = true;
+                }
+                else {
+                    let dropItem = {
+                        item: `${qty} x ${item}`,
+                        quantity: qty,
+                        name: item,
+                        type: "SEREN",
+                        time: new Date(),
+                        chatLine
+                    };
+                    updateSaveData({ data: dropItem });
+                    updateChatHistory(chatLine);
+                    showItems();
+                    sendDiscordNotification(dropItem);
+                    debug(`💾 SEREN SAVE! ${qty} x ${item}`);
+                    salvo = true;
+                }
             }
         }
         // HAZELMERE
         if (!salvo && chatLine.includes("Hazelmere")) {
-            debug("🔱 HAZELMERE detectado por palavra-chave");
+            debug("🔱 HAZELMERE detected");
             let match = chatLine.match(/receive:? (\d+) x (.*)/i);
             if (match) {
                 let qty = parseInt(match[1]);
                 let item = match[2].trim();
                 let type = chatLine.includes("doubles") ? "HSR_DOUBLE" : "HSR";
-                let dropItem = {
-                    item: `${qty} x ${item}`,
-                    quantity: qty,
-                    name: item,
-                    type: type,
-                    time: new Date(),
-                    chatLine
-                };
-                updateSaveData({ data: dropItem });
-                updateChatHistory(chatLine);
-                showItems();
-                sendDiscordNotification(dropItem);
-                debug(`💾 HAZELMERE SALVO! ${qty} x ${item}`);
-                salvo = true;
+                if (isDuplicateDrop(item, chatLine, type)) {
+                    debug(`⏭️ Duplicated Drop (HAZELMERE): ${item}`);
+                    salvo = true;
+                }
+                else {
+                    let dropItem = {
+                        item: `${qty} x ${item}`,
+                        quantity: qty,
+                        name: item,
+                        type: type,
+                        time: new Date(),
+                        chatLine
+                    };
+                    updateSaveData({ data: dropItem });
+                    updateChatHistory(chatLine);
+                    showItems();
+                    sendDiscordNotification(dropItem);
+                    debug(`💾 HAZELMERE SAVE! ${qty} x ${item}`);
+                    salvo = true;
+                }
             }
         }
         // ===== 2. SE NÃO DETECTOU POR PALAVRA, TENTA FRASES PERSONALIZADAS =====
@@ -383,11 +432,18 @@ function readChatbox() {
                     else if (phrase.includes("Hazelmere"))
                         type = phrase.includes("doubles") ? "HSR_DOUBLE" : "HSR";
                     else if (phrase.includes("golden"))
-                        type = "FEIXE";
+                        type = "BEAM";
                     else if (phrase.includes("Seren"))
                         type = "SEREN";
                     let qty = parseInt(match[1]);
                     let item = match[2].trim();
+                    // ===== VERIFICAÇÃO DE DUPLICATA PARA FRASES =====
+                    if (isDuplicateDrop(item, chatLine, type)) {
+                        debug(`⏭️ Drop por frase duplicado ignorado (${type}): ${item}`);
+                        salvo = true;
+                        break;
+                    }
+                    // ============================================
                     debug(`🎉 DROP por frase! ${type}: ${qty} x ${item}`);
                     let dropItem = {
                         item: `${qty} x ${item}`,
@@ -400,6 +456,7 @@ function readChatbox() {
                     updateSaveData({ data: dropItem });
                     updateChatHistory(chatLine);
                     showItems();
+                    sendDiscordNotification(dropItem); // Adiciona notificação Discord
                     salvo = true;
                     break;
                 }
@@ -678,7 +735,7 @@ function showConfirmModal(message, onConfirm) {
         box-shadow: 0 0 20px rgba(255,215,0,0.3);
     `;
     content.innerHTML = `
-        <div style="font-size: 24px; margin-bottom: 15px;">⚠️ WARNING</div>
+        <div style="font-size: 24px; margin-bottom: 15px;">⚠️ WARNING?</div>
         <div style="margin-bottom: 25px; font-size: 14px; white-space: pre-line;">${message}</div>
         <div style="display: flex; gap: 10px; justify-content: center;">
             <button class="nisbutton" id="confirmYes" style="background: #28a745; border-color: #ffd700;">✅ YES</button>
@@ -698,21 +755,6 @@ function showConfirmModal(message, onConfirm) {
         debug("❌ Usuário cancelou");
     });
 }
-// ===== RESET MANUAL =====
-let resetBtn = document.createElement('button');
-resetBtn.className = 'nisbutton w-100';
-resetBtn.textContent = '🔄 Reset Reader';
-resetBtn.style.marginTop = '10px';
-(_b = document.querySelector('.modal-body')) === null || _b === void 0 ? void 0 : _b.appendChild(resetBtn);
-resetBtn.addEventListener('click', () => {
-    reader.pos = null;
-    reader.find();
-    debug("🔄 Reader resetado");
-});
-// ===== VERSÃO =====
-let versionSpan = document.getElementById("version-number");
-if (versionSpan)
-    versionSpan.textContent = VERSION;
 // ===== INIT =====
 if (!localStorage.getItem(appName)) {
     localStorage.setItem(appName, JSON.stringify({ chat: 0, data: [], mode: "history" }));

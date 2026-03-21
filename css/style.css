@@ -1,10 +1,10 @@
 :root {
     /* Alturas fixas em px */
-    --header-height: 50px;        /* Drop History */
-    --total-height: 50px;         /* Total drop */
+    --header-height: 40px;        /* Drop History */
+    --total-height: 35px;         /* Total drop */
     --filters-height: 70px;       /* Botões de filter */
     --filter-count-height: 20px;  /* Contagem dos filters */
-    --bottom-height: 75px;        /* Footer (Settings + versão) */
+    --bottom-height: 70px;        /* Footer (Settings + versão) */
 }
 
 /* ===== ESTILOS BASE ===== */
@@ -23,7 +23,7 @@ body.nis {
     background-position: center;
     background-repeat: repeat;
     background-attachment: fixed;
-    min-width: 200px !important;
+    min-width: 180px !important;
     overflow-x: hidden !important;
     display: flex;
     flex-direction: column;
@@ -58,7 +58,23 @@ body.nis {
     padding: 10px;
     margin: 0;
 }
+.list-group > li {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
 
+.list-group .item.loading {
+    background: #2a2a2a !important;
+    border: 2px solid #ffd700 !important;
+    border-radius: 8px !important;
+    padding: 20px !important;
+    margin: 10px 0 !important;
+    text-align: center !important;
+    color: #ffd700 !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+}
 .list-group-item {
     background: transparent !important;
     border: 1px solid #666 !important;
@@ -71,7 +87,37 @@ body.nis {
     white-space: normal !important;
     text-align: left !important;
 }
+/* ===== FORÇA COR VERMELHA EM COMPONENTES RAROS ===== */
+.list-group-item.rare-component,
+.rare-component,
+li.list-group-item.rare-component,
+li.rare-component {
+    color: #ff0000 !important;
+    font-weight: bold !important;
+    text-shadow: 0 0 2px rgba(255, 0, 0, 0.5) !important;
+}
 
+/* Garante que a cor vermelha tenha prioridade máxima */
+.list-group-item.rare-component .item-text,
+.rare-component .item-text {
+    color: #ff4444 !important;
+}
+
+/* Remove qualquer possível sobrescrita */
+.list-group-item {
+    color: white !important;
+}
+
+.list-group-item.rare-component {
+    color: #ff4444 !important;
+}
+
+/* Para garantir que o emoji também fique vermelho */
+.rare-component .totals-emoji,
+.rare-component .totals-label,
+.rare-component .totals-value {
+    color: #ff4444 !important;
+}
 .list-group-item:hover {
     background-color: #333333 !important;
     border-color: #574930 !important;
@@ -79,17 +125,28 @@ body.nis {
 
 .list-group::-webkit-scrollbar {
     width: 8px;
+    border-radius: 4px;
+
 }
 
 .list-group::-webkit-scrollbar-track {
-    background: #ff0b0b00;
+    background: none;
+    border-radius: 4px;
 }
 
 .list-group::-webkit-scrollbar-thumb {
     background: #ffd700;
     border-radius: 4px;
 }
-
+.list-group {
+    scrollbar-width: thin;
+    scrollbar-color: #ffd700 #2a2a2a;
+}
+.list-group::-webkit-scrollbar-button {
+    display: none !important;
+    height: 0 !important;
+    width: 0 !important;
+}
 /* ===== HEADER (Drop History) ===== */
 .header {
     text-align: center;
@@ -100,7 +157,7 @@ body.nis {
     left: -5px;
     width: calc(100% + 5px);
     min-width: 80px !important;
-    font-size: 8pt !important;
+    font-size: 12pt !important;
     white-space: nowrap !important;
     border-radius: 4px !important;
     cursor: pointer !important;
@@ -130,6 +187,7 @@ body.nis {
     background-color: #1a1a1a;
 }
 
+
 /* ===== FILTROS (BOTÕES) ===== */
 .filters-container {
     position: fixed;
@@ -141,17 +199,20 @@ body.nis {
     border-bottom: 1px solid #574930;
     box-sizing: border-box;
     height: var(--filters-height);
-    padding: 8px 10px;
+    padding: 0; /* Remove o padding para os botões ficarem encostados nas bordas */
+    display: flex;
 }
 
-/* Container dos botões - TODOS NA MESMA LINHA */
+/* Container dos botões - TODOS NA MESMA LINHA, SEM GAP */
 .filters-wrapper {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(6, 1fr); /* 6 colunas iguais */
+    gap: 0; /* SEM ESPAÇO entre os botões */
+    width: 100%;
     height: 100%;
     box-sizing: border-box;
-    align-items: center;
+    margin: 0;
+    padding: 0;
 }
 
 /* Estilo dos botões */
@@ -161,9 +222,10 @@ body.nis {
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: 6px 4px;
+    height: 100%; /* Ocupa toda a altura do container */
+    padding: 0; /* Remove padding interno para melhor centralização */
     border: 1px solid #574930;
-    border-radius: 4px;
+    border-radius: 0; /* Remove bordas arredondadas para ficar encostado */
     background-color: #1a1a1a;
     color: #fff;
     cursor: pointer;
@@ -175,15 +237,9 @@ body.nis {
     box-sizing: border-box;
 }
 
-.filter-btn {
-    background: none;
-    font-family: inherit;
-}
-
 .filter-btn:hover {
-    background-color: #444;
+    background-color: #92775379;
     border-color: #ffd700;
-    transform: translateY(-1px);
 }
 
 .filter-btn.active {
@@ -217,34 +273,45 @@ body.nis {
 
 /* ===== FOOTER ===== */
 .fixed-bottom {
+    background: url(background.png);
+    border-bottom: 1px solid #574930;
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
     height: var(--bottom-height);
-    border-top: 2px solid #574930;
-    padding: 10px 0;
+    padding: 8px 10px;
     z-index: 1000;
     margin: 0;
     background-color: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
 .fixed-bottom .nisbutton {
-    margin-bottom: 5px;
-    height: 40px;
+    width: 100%;
+    height: auto;
+    min-height: 0;
     font-size: 8pt !important;
+    flex: 3; /* Ocupa 3 partes do espaço */
+    margin: 0;
 }
 
 .version-row {
-    margin-top: 5px;
     text-align: center;
-    padding-bottom: 5px;
+    padding: 0;
+    flex: 1; /* Ocupa 1 parte do espaço */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .version-text {
     color: #ffd700 !important;
     opacity: 0.6;
     font-size: 10px;
+    line-height: 1.2;
 }
 
 /* ===== TOTALS (CONTADORES DENTRO DO MODAL) ===== */
@@ -253,9 +320,9 @@ body.nis {
     justify-content: space-between;
     align-items: center;
     text-align: center;
-    padding: 10px;
-    background-color: #2a2a2a;
-    border: 2px solid #444;
+    padding: 1px;
+    background: url(background.png);
+    border-bottom: 2px solid #574930;
     border-radius: 4px;
     margin: 10px 0;
     gap: 0;
@@ -265,24 +332,37 @@ body.nis {
     display: flex;
     flex-direction: column;
     align-items: center;
-    flex: 1;
-    min-width: 0;
-    padding: 8px 4px;
-    border: 1px solid #574930;
-    border-radius: 8px;
+    justify-content: center;
+    flex: 1; /* Todos ocupam o mesmo espaço */
+    min-width: 0; /* Permite encolher */
+    padding: 8px 0; /* Apenas padding vertical */
+    border: none; /* Remove borda individual */
     background-color: #1a1a1a;
     margin: 0;
+    position: relative;
+}
+.totals-item:not(:first-child)::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 10%;
+    height: 80%;
+    width: 1px;
+    background-color: #574930;
 }
 
+.totals-item:first-child::before {
+    display: none;
+}
 .totals-emoji {
-    font-size: 24px;
+    font-size: 14px;
     margin-bottom: 5px;
 }
 
 .totals-label {
     color: #ffd700;
     font-weight: bold;
-    font-size: 12px;
+    font-size: 10px;
     margin-bottom: 3px;
     white-space: nowrap;
 }
@@ -290,7 +370,7 @@ body.nis {
 .totals-value {
     color: #dba800;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 10px;
 }
 
 /* ===== RING ICONS ===== */

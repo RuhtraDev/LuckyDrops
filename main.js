@@ -65,18 +65,43 @@ __webpack_require__(/*! ./icon.png */ "./icon.png");
 const APP_NAME = "LuckyDrops";
 const timestampRegex = /\[\d{2}:\d{2}:\d{2}\]/g;
 const RARE_COMPONENTS = [
-    "Brassican", "Knightly", "Dragonfire", "Fungal", "Explosive",
-    "Corporeal", "Armadyl", "Bandos", "Saradomin", "Seren", "Zamorak",
-    "Zaros", "Resilient", "Silent", "Noxious", "Rumbling", "Pestiferous",
-    "Third-age", "Culinary", "Shifting", "Harnessed", "Oceanic",
-    "Ascended", "Undead", "Avernic", "Shadow", "Ilujankan", "Cywir",
-    "Faceted", "Clockwork", "Fortunate", "Manufactured", "Ecliptic"
+    "Brassican", "Knightly", "Dragonfire", "Fungal",
+    "Explosive",
+    "Corporeal",
+    "Armadyl",
+    "Bandos",
+    "Saradomin",
+    "Seren",
+    "Zamorak",
+    "Zaros",
+    "Resilient",
+    "Silent",
+    "Noxious",
+    "Rumbling",
+    "Pestiferous",
+    "Third-age",
+    "Culinary",
+    "Shifting",
+    "Harnessed",
+    "Oceanic",
+    "Ascended",
+    "Undead",
+    "Avernic",
+    "Shadow",
+    "Ilujankan",
+    "Cywir",
+    "Faceted",
+    "Clockwork",
+    "Fortunate",
+    "Manufactured",
+    "Ecliptic"
 ];
 // ===== VARIÁVEL DE FILTRO ATUAL =====
 let currentFilter = "all"; // "all", "LOTD", "HSR", "BEAM", "SEREN", "COMPS"
 // ===== VISUAL DEBUG =====
-const DEBUG_MODE = false; // Change to view log
 let debugDiv = null;
+let debugPanelVisible = false;
+const DEBUG_MODE = true; // ← Declara ANTES de usar
 if (DEBUG_MODE) {
     debugDiv = document.createElement('div');
     debugDiv.style.cssText = `
@@ -84,16 +109,20 @@ if (DEBUG_MODE) {
         background: rgba(0,0,0,0.9); color: #0f0; font-family: monospace;
         font-size: 10px; padding: 5px; overflow-y: auto; z-index: 10000;
         border: 2px solid #ffd700; border-radius: 5px;
+        display: none;
     `;
     document.body.appendChild(debugDiv);
 }
 function debug(msg) {
     console.log(msg);
-    if (DEBUG_MODE && debugDiv) {
+    if (DEBUG_MODE && debugDiv && debugPanelVisible) {
         const line = document.createElement('div');
         line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
         debugDiv.appendChild(line);
-        // NÃO FAZER SCROLL AUTOMÁTICO
+        debugDiv.scrollTop = debugDiv.scrollHeight;
+        while (debugDiv.children.length > 500) {
+            debugDiv.removeChild(debugDiv.children[0]);
+        }
     }
 }
 // ===== DOM ELEMENTS =====
@@ -112,23 +141,24 @@ reader.readargs = {
     colors: [
         a1lib.mixColor(255, 255, 255), // Branco (texto fixo)
         a1lib.mixColor(255, 112, 0), // LOTD & HSR (laranja)
-        a1lib.mixColor(245, 151, 0), // Feixe (laranja mais claro)
+        a1lib.mixColor(245, 151, 0), // Beam (laranja mais claro)
         a1lib.mixColor(0, 255, 255), // Seren (ciano)
         a1lib.mixColor(255, 165, 0), // COMPONENTS (laranja)
+        a1lib.mixColor(255, 128, 0), // COMPONENTS (laranja Blessing Gods)
         a1lib.mixColor(255, 0, 0) // Vermelho (componentes raros)
     ]
 };
 // ===== UPDATE COUNT IN MODAL =====
 function updateCounters() {
     const data = getSaveData("data") || [];
-    let lotd = 0, hsr = 0, feixe = 0, seren = 0, comps = 0;
+    let lotd = 0, hsr = 0, beam = 0, seren = 0, comps = 0;
     data.forEach((item) => {
         if (item.type === "LOTD")
             lotd++;
         else if (item.type.includes("HSR"))
             hsr++;
-        else if (item.type === "FEIXE")
-            feixe++;
+        else if (item.type === "BEAM")
+            beam++;
         else if (item.type === "SEREN")
             seren++;
         else if (item.type === "COMPS")
@@ -136,15 +166,15 @@ function updateCounters() {
     });
     const lotdEl = document.getElementById("lotdCount");
     const hsrEl = document.getElementById("hazelmereCount");
-    const feixeEl = document.getElementById("feixeCount");
+    const beamEl = document.getElementById("beamCount");
     const serenEl = document.getElementById("serenCount");
     const compsEl = document.getElementById("compsCount");
     if (lotdEl)
         lotdEl.textContent = String(lotd);
     if (hsrEl)
         hsrEl.textContent = String(hsr);
-    if (feixeEl)
-        feixeEl.textContent = String(feixe);
+    if (beamEl)
+        beamEl.textContent = String(beam);
     if (serenEl)
         serenEl.textContent = String(seren);
     if (compsEl)
@@ -172,7 +202,7 @@ const DEFAULT_PHRASES = [
     // LOTD
     "Your Luck of the Dwarves ring shines brightly. You receive: (\\d+) x (.*)",
     "Your Luck of the Dwarves shines brightly and you receive: (\\d+) x (.*)",
-    // FEIXE (SÓ UMA VEZ!)
+    // BEAM (SÓ UMA VEZ!)
     "A golden beam shines over one of your items. You receive: (\\d+) x (.*)",
     // HAZELMERE
     "Your Hazelmere's signet ring shines brightly. You receive: (\\d+) x (.*)",
@@ -498,7 +528,7 @@ function readChatbox() {
                 }
             }
         }
-        // COMPONENTS (Scavenging)
+        // COMPONENTS (Scavenging) - COM DETECÇÃO DE COR VERMELHA
         if (!salvo && (chatLine.includes("Materials gained:") || chatLine.includes("Scavenging perk adds:"))) {
             debug("💡 COMPONENTS detected");
             let match = chatLine.match(/(?:Materials gained:|Your Scavenging perk adds:)\s*(\d+)\s*x\s*(.+)/i);
@@ -512,14 +542,33 @@ function readChatbox() {
                 }
                 else {
                     let displayName = item.replace(/\s+components?$/i, '');
-                    // Verifica se é um componente raro
-                    let isRare = RARE_COMPONENTS.includes(displayName);
+                    // ===== DETECTA SE O COMPONENTE É VERMELHO PELA COR DO CHAT =====
+                    // O Alt1 já detecta a cor no objeto 'opts' original
+                    // Precisamos encontrar qual segmento contém este texto
+                    let isRareByColor = false;
+                    // Procurar nos segmentos originais do reader
+                    if (reader.read() && reader.read().length > 0) {
+                        const segments = reader.read();
+                        for (let seg of segments) {
+                            if (seg.text && seg.text.includes(displayName) && seg.color) {
+                                const [r, g, b] = seg.color;
+                                // Verifica se é vermelho (R alto, G e B baixos)
+                                if (r > 200 && g < 100 && b < 100) {
+                                    isRareByColor = true;
+                                    debug(`🔴 Componente VERMELHO detectado pela cor: ${displayName} (rgb: ${r},${g},${b})`);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    // Fallback: se não detectou pela cor, usa a lista estática
+                    let isRare = isRareByColor || RARE_COMPONENTS.includes(displayName);
                     let dropItem = {
                         item: `${qty} x ${displayName}`,
                         quantity: qty,
                         name: displayName,
                         type: "COMPS",
-                        isRare: isRare, // Adiciona flag de raridade
+                        isRare: isRare,
                         time: new Date(),
                         chatLine
                     };
@@ -527,7 +576,7 @@ function readChatbox() {
                     updateChatHistory(chatLine);
                     showItems();
                     sendDiscordNotification(dropItem);
-                    debug(`💾 COMPONENTS SAVE! ${qty} x ${item} -> ${displayName}${isRare ? ' ⚡ RARO!' : ''}`);
+                    debug(`💾 COMPONENTS SAVE! ${qty} x ${item} -> ${displayName}${isRare ? ' 🔴 RARO!' : ''}`);
                     salvo = true;
                 }
             }
@@ -585,7 +634,9 @@ function readChatbox() {
 function showItems() {
     if (!itemList)
         return;
-    itemList.querySelectorAll("li.item:not(.header):not(.total):not(.filters-container)").forEach(el => el.remove());
+    // Remove apenas os itens de drop
+    const dropItems = itemList.querySelectorAll("li.item:not(.header):not(.total):not(.filters-container):not(.filter-count):not(.loading)");
+    dropItems.forEach(el => el.remove());
     let data = getSaveData("data") || [];
     // Atualiza o total principal
     const totalElement = document.getElementById("total");
@@ -596,6 +647,52 @@ function showItems() {
     const totalCountElement = document.getElementById("totalCount");
     if (totalCountElement) {
         totalCountElement.textContent = String(data.length);
+    }
+    // Atualiza o totalFiltered na área de filtros
+    const totalFilteredElement = document.getElementById("totalFiltered");
+    if (totalFilteredElement) {
+        if (data.length === 0) {
+            totalFilteredElement.textContent = "0";
+        }
+    }
+    // Se não há dados, mantém o loading
+    if (data.length === 0) {
+        let loadingItem = itemList.querySelector(".item.loading");
+        if (!loadingItem) {
+            itemList.insertAdjacentHTML("beforeend", `
+                <li class="list-group-item item loading">
+                    ⚠️ If you're reading this, the Chat Reader is not working ⚠️<br>
+                    Try:<br>
+                    • Enable timestamps (Runescape settings)<br>
+                    • Set interface transparency to 0%<br>
+                    • In Alt1, click 🔧 and enable:<br>
+                    &nbsp;&nbsp;- View screen<br>
+                    &nbsp;&nbsp;- Get game state<br>
+                    &nbsp;&nbsp;- Show overlay<br>
+                    • Close and reopen the app<br>
+                    <br>
+                    Still issues? Wait for an update.<br>
+                    <br>
+                    ⚠️ Se está lendo isso o Leitor de Chat Não Funciona ⚠️<br>
+                    Tente:<br>
+                    • Ativar os horários do jogo (config. do RS3)<br>
+                    • Colocar a Transparência da interface em 0%<br>
+                    • No Alt1, clique em 🔧 e ative:<br>
+                    &nbsp;&nbsp;- Ver tela<br>
+                    &nbsp;&nbsp;- Obter estado do jogo<br>
+                    &nbsp;&nbsp;- Mostrar overlay<br>
+                    • Fecha e abrir o app novamente<br>
+                    <br>
+                    Ainda com problemas? Aguarde uma atualização.
+                </li>
+            `);
+        }
+        return;
+    }
+    // Se tem dados, remove o loading se existir
+    const loadingItem = itemList.querySelector(".item.loading");
+    if (loadingItem) {
+        loadingItem.remove();
     }
     let mode = getSaveData("mode");
     // Filtrar dados se não for "all"
@@ -608,13 +705,27 @@ function showItems() {
             filteredData = data.filter((item) => item.type === currentFilter);
         }
     }
+    // Função para pegar emoji baseado no tipo do item
+    function getEmojiByType(type) {
+        if (type === "LOTD")
+            return "💍";
+        if (type.includes("HSR"))
+            return "🔱";
+        if (type === "BEAM")
+            return "✨";
+        if (type === "SEREN")
+            return "💎";
+        if (type === "COMPS")
+            return "💡";
+        return "📦";
+    }
     if (mode === "total") {
         listHeader.innerHTML = "Drop Totals";
         listHeader.dataset.show = "history";
         let totals = {};
         filteredData.forEach((item) => {
             if (!totals[item.name])
-                totals[item.name] = { total: 0, lotd: 0, hsr: 0, beam: 0, seren: 0, comps: 0 };
+                totals[item.name] = { total: 0, lotd: 0, hsr: 0, beam: 0, seren: 0, comps: 0, type: item.type };
             totals[item.name].total += item.quantity;
             if (item.type === "LOTD")
                 totals[item.name].lotd += item.quantity;
@@ -629,25 +740,24 @@ function showItems() {
         });
         Object.keys(totals).sort().forEach(n => {
             let t = totals[n];
-            // Define o emoji com base no filtro atual
-            let emoji = "";
-            if (currentFilter === "LOTD")
-                emoji = "💍";
-            else if (currentFilter === "HSR")
-                emoji = "🔱";
-            else if (currentFilter === "BEAM")
-                emoji = "✨";
-            else if (currentFilter === "SEREN")
-                emoji = "💎";
-            else if (currentFilter === "COMPS")
-                emoji = "💡";
-            else
-                emoji = ""; // Sem filtro, não mostra emoji na frente
-            // Para componentes raros no modo COMPS
+            let emoji = getEmojiByType(t.type);
             let isRareComponent = RARE_COMPONENTS.indexOf(n) !== -1;
-            let itemStyle = (currentFilter === "COMPS" && isRareComponent) ? ' style="color: #ff4444; font-weight: bold;"' : '';
-            let rareIcon = (currentFilter === "COMPS" && isRareComponent) ? "🔴" : "";
-            // Mostra apenas a quantidade do tipo filtrado
+            // ===== CORREÇÃO: Para COMPS raros, usa apenas a bola vermelha =====
+            let iconDisplay = "";
+            let itemStyle = "";
+            if (currentFilter === "COMPS" && isRareComponent) {
+                // Raro: mostra apenas a bola vermelha, sem emoji de lâmpada
+                iconDisplay = "🔴";
+                itemStyle = ' style="color: #ff0000 !important; font-weight: bold !important;"';
+            }
+            else if (currentFilter === "COMPS" && !isRareComponent) {
+                // Comum: mostra apenas o emoji de lâmpada
+                iconDisplay = "💡";
+            }
+            else {
+                // Outros tipos: mostra o emoji correspondente
+                iconDisplay = emoji;
+            }
             let quantity = 0;
             if (currentFilter === "LOTD")
                 quantity = t.lotd;
@@ -660,46 +770,55 @@ function showItems() {
             else if (currentFilter === "COMPS")
                 quantity = t.comps;
             else
-                quantity = t.total; // Sem filtro, mostra total
-            // Só mostra se tiver quantidade > 0
+                quantity = t.total;
             if (quantity > 0) {
-                let displayText = currentFilter === "all"
-                    ? `${n}: ${quantity}` // Sem filtro: só nome e quantidade
-                    : `${emoji} ${rareIcon}${n}: ${quantity}`; // Com filtro: emoji + nome + quantidade
+                let displayText = `${iconDisplay} ${n}: ${quantity}`;
                 itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item"${itemStyle}>${displayText}</li>`);
             }
         });
     }
     else {
-        // ===== MODO HISTORY =====
         listHeader.innerHTML = "Drop History";
         listHeader.dataset.show = "total";
         filteredData.slice().reverse().forEach((item) => {
-            // Define o ícone base
             let icon = item.type === "LOTD" ? "💍" :
                 item.type.includes("HSR") ? "🔱" :
                     item.type === "BEAM" ? "✨" :
                         item.type === "SEREN" ? "💎" :
-                            item.type === "COMPS" ? (item.isRare ? "🔴💡" : "💡") : "📦";
-            // Para componentes raros, adiciona estilo vermelho e negrito
+                            item.type === "COMPS" ? (item.isRare ? "🔴" : "💡") : "📦";
+            // ===== ESTILO INLINE PARA COMPONENTES RAROS =====
             let itemStyle = "";
             let itemText = item.item;
             if (item.type === "COMPS" && item.isRare) {
-                itemStyle = ' style="color: #ff4444; font-weight: bold;"';
+                itemStyle = ' style="color: #ff0000 !important; font-weight: bold !important;"';
+                debug(`🔴 Exibindo componente raro: ${item.name}`);
             }
+            else {
+                debug(`⚪ Componente comum: ${item.name} - isRare: ${item.isRare}`);
+            }
+            // ===== FORMATAÇÃO DA DATA/HORA =====
+            let dataHora = new Date(item.time);
+            let dataFormatada = dataHora.toLocaleDateString();
+            let horaFormatada = dataHora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             let filterTag = "";
-            if (currentFilter !== "all") {
-                filterTag = ` [${item.type}]`;
+            let displayText = "";
+            if (currentFilter === "all") {
+                // Filtro ALL: mostra apenas o item
+                displayText = `${icon} ${itemText}`;
             }
-            itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item" title="${new Date(item.time).toLocaleString()}"${itemStyle}>${icon} ${itemText}${filterTag}</li>`);
+            else {
+                // Outros filtros: mostra com data e hora
+                displayText = `${icon} ${itemText} - 📅 ${dataFormatada} - 🕒 ${horaFormatada}`;
+            }
+            itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item"${itemStyle} title="📅 ${dataFormatada} ${horaFormatada}${filterTag}">
+                    ${displayText}
+                </li>`);
         });
     }
-    // Se não houver resultados com o filtro
-    if (filteredData.length === 0) {
+    if (filteredData.length === 0 && data.length > 0) {
         itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item" style="text-align: center; color: #666;">✨ No drops for this filter ✨</li>`);
     }
     updateCounters();
-    // Atualizar contadores do modal também com filtro
     updateFilteredCounters(filteredData);
 }
 // Nova função para atualizar contadores com filtro
@@ -748,15 +867,19 @@ setTimeout(initFilters, 1000);
 // ===== INICIALIZAÇÃO DO CHAT (IGUAL ZEROGWAFA) =====
 window.setTimeout(() => {
     let findChat = setInterval(() => {
-        var _a, _b;
+        var _a;
         if (!reader.pos) {
             reader.find();
             return;
         }
         clearInterval(findChat);
         debug("✅ Chat encontrado!");
-        (_a = document.querySelector(".item.loading")) === null || _a === void 0 ? void 0 : _a.remove();
-        if ((_b = reader.pos) === null || _b === void 0 ? void 0 : _b.boxes) {
+        const loadingElement = document.querySelector(".item.loading");
+        if (loadingElement) {
+            loadingElement.remove();
+        }
+        debug("✅ Chat encontrado! Loading removido.");
+        if ((_a = reader.pos) === null || _a === void 0 ? void 0 : _a.boxes) {
             reader.pos.boxes.forEach((_, i) => {
                 chatSelector.insertAdjacentHTML("beforeend", `<option value="${i}">Chat ${i}</option>`);
             });
@@ -998,6 +1121,30 @@ function showConfirmModal(message, onConfirm) {
         modal.remove();
         debug("❌ Usuário cancelou");
     });
+}
+// ===== TOGGLE DEBUG (Ctrl+5) =====
+document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.key === "5") {
+        e.preventDefault();
+        debugPanelVisible = !debugPanelVisible;
+        if (debugDiv) {
+            debugDiv.style.display = debugPanelVisible ? "block" : "none";
+        }
+    }
+});
+// Adicionar uma dica visual no canto do debug (opcional)
+if (debugDiv) {
+    const hint = document.createElement('div');
+    hint.textContent = "Ctrl+5 to toggle";
+    hint.style.cssText = `
+        position: absolute;
+        bottom: 2px;
+        right: 5px;
+        font-size: 8px;
+        color: #666;
+        font-family: monospace;
+    `;
+    debugDiv.appendChild(hint);
 }
 // ===== INIT =====
 if (!localStorage.getItem(appName)) {

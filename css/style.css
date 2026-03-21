@@ -1,5 +1,6 @@
 :root {
-    --header-height: 40px;        
+    --header-height: 40px;
+    --total-height: 35px;         
     --filters-height: 70px;      
     --filter-count-height: 20px; 
     --bottom-height: 70px;        

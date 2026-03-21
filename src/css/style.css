@@ -1,13 +1,10 @@
 :root {
-    /* Alturas fixas em px */
-    --header-height: 40px;        /* Drop History */
-    --total-height: 35px;         /* Total drop */
-    --filters-height: 70px;       /* Botões de filter */
-    --filter-count-height: 20px;  /* Contagem dos filters */
-    --bottom-height: 70px;        /* Footer (Settings + versão) */
+    --header-height: 40px;        
+    --filters-height: 70px;      
+    --filter-count-height: 20px; 
+    --bottom-height: 70px;        
 }
 
-/* ===== ESTILOS BASE ===== */
 .row {
     text-align: center;
 }
@@ -47,7 +44,6 @@ body.nis {
     position: relative;
 }
 
-/* ===== LISTA DE DROPS (CORPO COM SCROLL) ===== */
 .list-group {
     position: fixed;
     top: calc(var(--header-height) + var(--total-height) + var(--filters-height) + var(--filter-count-height) + 10px);
@@ -87,7 +83,6 @@ body.nis {
     white-space: normal !important;
     text-align: left !important;
 }
-/* ===== FORÇA COR VERMELHA EM COMPONENTES RAROS ===== */
 .list-group-item.rare-component,
 .rare-component,
 li.list-group-item.rare-component,
@@ -97,13 +92,11 @@ li.rare-component {
     text-shadow: 0 0 2px rgba(255, 0, 0, 0.5) !important;
 }
 
-/* Garante que a cor vermelha tenha prioridade máxima */
 .list-group-item.rare-component .item-text,
 .rare-component .item-text {
     color: #ff4444 !important;
 }
 
-/* Remove qualquer possível sobrescrita */
 .list-group-item {
     color: white !important;
 }
@@ -112,7 +105,6 @@ li.rare-component {
     color: #ff4444 !important;
 }
 
-/* Para garantir que o emoji também fique vermelho */
 .rare-component .totals-emoji,
 .rare-component .totals-label,
 .rare-component .totals-value {
@@ -187,8 +179,6 @@ li.rare-component {
     background-color: #1a1a1a;
 }
 
-
-/* ===== FILTROS (BOTÕES) ===== */
 .filters-container {
     position: fixed;
     top: calc(var(--header-height) + var(--total-height) + 5px);
@@ -199,15 +189,14 @@ li.rare-component {
     border-bottom: 1px solid #574930;
     box-sizing: border-box;
     height: var(--filters-height);
-    padding: 0; /* Remove o padding para os botões ficarem encostados nas bordas */
+    padding: 0; 
     display: flex;
 }
 
-/* Container dos botões - TODOS NA MESMA LINHA, SEM GAP */
 .filters-wrapper {
     display: grid;
-    grid-template-columns: repeat(6, 1fr); /* 6 colunas iguais */
-    gap: 0; /* SEM ESPAÇO entre os botões */
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0;
     width: 100%;
     height: 100%;
     box-sizing: border-box;
@@ -215,17 +204,16 @@ li.rare-component {
     padding: 0;
 }
 
-/* Estilo dos botões */
 .filter-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 100%; /* Ocupa toda a altura do container */
-    padding: 0; /* Remove padding interno para melhor centralização */
+    height: 100%; 
+    padding: 0;
     border: 1px solid #574930;
-    border-radius: 0; /* Remove bordas arredondadas para ficar encostado */
+    border-radius: 0;
     background-color: #1a1a1a;
     color: #fff;
     cursor: pointer;
@@ -250,7 +238,6 @@ li.rare-component {
     box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
 }
 
-/* ===== CONTAGEM DOS FILTERS (ÁREA DE 20px) ===== */
 .filter-count {
     position: fixed;
     top: calc(var(--header-height) + var(--total-height) + var(--filters-height) + 5px);
@@ -271,7 +258,6 @@ li.rare-component {
     color: #fff;
 }
 
-/* ===== FOOTER ===== */
 .fixed-bottom {
     background: url(background.png);
     border-bottom: 1px solid #574930;
@@ -294,14 +280,14 @@ li.rare-component {
     height: auto;
     min-height: 0;
     font-size: 8pt !important;
-    flex: 3; /* Ocupa 3 partes do espaço */
+    flex: 3; 
     margin: 0;
 }
 
 .version-row {
     text-align: center;
     padding: 0;
-    flex: 1; /* Ocupa 1 parte do espaço */
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -314,7 +300,6 @@ li.rare-component {
     line-height: 1.2;
 }
 
-/* ===== TOTALS (CONTADORES DENTRO DO MODAL) ===== */
 .totals-container {
     display: flex;
     justify-content: space-between;
@@ -333,10 +318,10 @@ li.rare-component {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    flex: 1; /* Todos ocupam o mesmo espaço */
-    min-width: 0; /* Permite encolher */
-    padding: 8px 0; /* Apenas padding vertical */
-    border: none; /* Remove borda individual */
+    flex: 1;
+    min-width: 0;
+    padding: 8px 0;
+    border: none;
     background-color: #1a1a1a;
     margin: 0;
     position: relative;
@@ -373,7 +358,6 @@ li.rare-component {
     font-size: 10px;
 }
 
-/* ===== RING ICONS ===== */
 .ring-icon {
     display: inline-block;
     width: 20px;
@@ -382,7 +366,6 @@ li.rare-component {
     min-width: 20px !important;
 }
 
-/* ===== MODAL ===== */
 .modal-body,
 .modal-header,
 .modal-footer {
@@ -393,12 +376,10 @@ li.rare-component {
     border: 1px solid #574930;
 }
 
-/* ===== TEXT MUTED ===== */
 .text-muted {
     color: #b4b4b4 !important;
 }
 
-/* ===== CHAT SELECTOR ===== */
 .chat-selector {
     background-color: #2a2a2a;
     color: white;
@@ -413,7 +394,6 @@ li.rare-component {
     border-color: #ffd700;
 }
 
-/* ===== BTN CLOSE ===== */
 .btn-close {
     filter: brightness(0) invert(1) !important;
     opacity: 0.8 !important;
@@ -426,7 +406,6 @@ li.rare-component {
     transform: scale(1.2) !important;
 }
 
-/* ===== TOOLTIPS ===== */
 .item-tooltip {
     background-color: #2a2a2a;
     border: 2px solid #ffd700;
@@ -437,7 +416,6 @@ li.rare-component {
     max-width: 300px;
 }
 
-/* ===== CUSTOM PHRASES ===== */
 .phrases-details,
 .webhook-details {
     background: #2a2a2a;
@@ -466,7 +444,6 @@ li.rare-component {
     font-family: monospace !important;
 }
 
-/* ===== WEBHOOK ===== */
 .form-control {
     background: #7e7e7e !important;
     color: white !important;
@@ -485,7 +462,6 @@ li.rare-component {
     margin-right: 5px;
 }
 
-/* ===== ANIMAÇÕES ===== */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -495,7 +471,6 @@ li.rare-component {
     animation: fadeIn 0.3s ease-in;
 }
 
-/* ===== MAIN ===== */
 .main {
     overflow-y: scroll;
     max-height: 75vh;

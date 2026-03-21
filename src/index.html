@@ -18,7 +18,7 @@
         <!-- Total Drops -->
         <li class="total">Total Drops: <span id="total">0</span></li>
         
-        <!-- Filtros - TODOS NA MESMA LINHA -->
+        <!-- Filters Button -->
         <li class="filters-container">
             <div class="filters-wrapper">
                 <button class="filter-btn active" data-filter="all">📋<br>ALL</button>
@@ -30,8 +30,7 @@
             </div>
         </li>
         
-        <!-- Área de contagem dos filters -->
-        <li class="filter-count">Mostrando: <span id="totalFiltered"></span> de <span id="totalCount">0</span> drops</li>
+        <li class="filter-count">Show: <span id="totalFiltered"></span> of <span id="totalCount">0</span> drops</li>
 
         
         <li class="list-group-item item loading">
@@ -61,15 +60,13 @@
         </li>
     </ul>
 
-
-
     <div class="container">
         <div class="row fixed-bottom">
             <div class="col">
                 <button class="nisbutton w-100" data-bs-toggle="modal" data-bs-target="#settings">⚙️ Settings</button>
                 <div class="row version-row">
                     <div class="col text-center">
-                        <small class="text-muted version-text">v 1.3.18.18</small>
+                        <small class="text-muted version-text">v 2.0.17.15</small>
                     </div>
                 </div>
             </div>
@@ -86,6 +83,7 @@
                 </div>
                 
                 <div class="modal-body">
+
                     <!-- Chat Selector -->
                     <div class="row mb-3">
                         <div class="col-6">
@@ -194,9 +192,9 @@ The Seren spirit gifts you: (\d+) x (.+)</textarea>
         </div>
     </div>
 <script>
-    console.log("✅ HTML carregado");
+    console.log("✅ HTML loaded");
     window.onload = function() {
-        console.log("✅ Página totalmente carregada");
+        console.log("✅ Page fully loaded");
     };
 </script>
 <script src="/dist/main.js"></script>

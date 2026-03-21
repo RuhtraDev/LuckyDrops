@@ -267,6 +267,33 @@ function isDuplicateDrop(itemName: string, chatLine: string, currentType: string
     return false;
 }
 
+function fixOcrText(text: string): string {
+    let fixed = text;
+    
+    // Correções comuns
+    const corrections = [
+        { wrong: "haif", correct: "half" },
+        { wrong: "tooth haif", correct: "tooth half" },
+        { wrong: "loof", correct: "loop" },
+        { wrong: "haly", correct: "half" },
+        { wrong: "hailf", correct: "half" },
+        { wrong: "haff", correct: "half" },
+        { wrong: "tooth haif of a key", correct: "tooth half of a key" },
+        { wrong: "loof haif", correct: "loop half" },
+        { wrong: "loof half", correct: "loop half" },
+        { wrong: "tooth half", correct: "tooth half" },
+        { wrong: "loop half", correct: "loop half" }
+    ];
+    
+    for (let i = 0; i < corrections.length; i++) {
+        let corr = corrections[i];
+        let regex = new RegExp(corr.wrong, 'gi');
+        fixed = fixed.replace(regex, corr.correct);
+    }
+    
+    return fixed;
+}
+
 function debugCache() {
     if (dropsCache.size > 0) {
         debug(`📊 Cache atual (${dropsCache.size} entradas):`);
@@ -366,7 +393,7 @@ function readChatbox() {
             if (match) {
                 let qty = parseInt(match[1]);
                 let item = match[2].trim().replace(/[.!?]$/, '');
-                
+                item = fixOcrText(item);
                 if (isDuplicateDrop(item, chatLine, "LOTD")) {
                     debug(`⏭️ Drop duplicated (LOTD): ${item}`);
                     salvo = true;
@@ -397,7 +424,7 @@ function readChatbox() {
             if (match) {
                 let qty = parseInt(match[1]);
                 let item = match[2].trim().replace(/[.!?]$/, '');
-                
+                item = fixOcrText(item);
                 if (isDuplicateDrop(item, chatLine, "BEAM")) {
                     debug(`⏭️ Drop duplicated (BEAM): ${item}`);
                     salvo = true;
@@ -429,7 +456,7 @@ function readChatbox() {
                 let qty = parseInt(match[1]);
                 let item = match[2].trim();
                 item = item.replace(/\.?\s*The gift is sent to your bank\.?$/i, '').replace(/[.!?]$/, '');
-                
+                item = fixOcrText(item);
                 if (isDuplicateDrop(item, chatLine, "SEREN")) {
                     debug(`⏭️ Drop duplicated (SEREN): ${item}`);
                     salvo = true;
@@ -461,7 +488,7 @@ function readChatbox() {
                 let qty = parseInt(match[1]);
                 let item = match[2].trim().replace(/[.!?]$/, '');
                 let type = chatLine.includes("doubles") ? "HSR_DOUBLE" : "HSR";
-                
+                item = fixOcrText(item);
                 if (isDuplicateDrop(item, chatLine, type)) {
                     debug(`⏭️ Duplicated Drop (HAZELMERE): ${item}`);
                     salvo = true;
@@ -493,7 +520,7 @@ function readChatbox() {
             if (match) {
                 let qty = parseInt(match[1]);
                 let item = match[2].trim().replace(/[.!?]$/, '');
-                
+                item = fixOcrText(item);
                 debug(`  → Quantity: ${qty}, Item: "${item}"`);
                 
                 if (isDuplicateDrop(item, chatLine, "COMPS")) {
@@ -565,7 +592,7 @@ function readChatbox() {
                     
                     let qty = parseInt(match[1]);
                     let item = match[2].trim().replace(/[.!?]$/, '');
-                    
+                    item = fixOcrText(item);
                     if (isDuplicateDrop(item, chatLine, type)) {
                         debug(`⏭️ Drop for duplicate phrase ignored (${type}): ${item}`);
                         salvo = true;

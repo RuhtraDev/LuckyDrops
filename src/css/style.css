@@ -1,3 +1,12 @@
+:root {
+    /* Alturas fixas em px */
+    --header-height: 40px;        /* Drop History */
+    --total-height: 35px;         /* Total drop */
+    --filters-height: 70px;       /* Botões de filter */
+    --filter-count-height: 20px;  /* Contagem dos filters */
+    --bottom-height: 70px;        /* Footer (Settings + versão) */
+}
+
 /* ===== ESTILOS BASE ===== */
 .row {
     text-align: center;
@@ -6,18 +15,21 @@
 body {
     margin-top: 10px !important;
     background-color: #1a1a1a;
-    color: #ffffff;
     font-family: 'trajan-pro-3', Arial, sans-serif;
 }
 
 body.nis {
-    min-width: 250px !important;
+    background-image: url('background.png');
+    background-position: center;
+    background-repeat: repeat;
+    background-attachment: fixed;
+    min-width: 180px !important;
     overflow-x: hidden !important;
-}
-
-/* ===== TAMANHOS MÍNIMOS ===== */
-.itemList {
-    min-width: 250px !important;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
 }
 
 .modal-dialog {
@@ -26,79 +38,339 @@ body.nis {
 }
 
 .nisbutton {
+    left: -5px;
     min-width: 80px !important;
     font-size: 8pt !important;
     white-space: nowrap !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    position: relative;
 }
 
-/* ===== ITENS DA LISTA ===== */
-.list-group-item {
-    background: transparent;
-    border: grey solid 1px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    padding: .5rem .75rem;
-    text-align: left;
-    color: white;
-    transition: background-color 0.2s;
-    min-width: 230px !important;
-    word-wrap: break-word !important;
-}
-
-.list-group-item:hover {
-    background-color: #333333;
-    border-color: #ffd700;
-}
-
-.list-group-item.lotd {
-    border-left: 4px solid #f57c01;
-}
-
-.list-group-item.hazelmere {
-    border-left: 4px solid #ffd700;
-}
-
+/* ===== LISTA DE DROPS (CORPO COM SCROLL) ===== */
 .list-group {
-    height: calc(100vh - 4.25em);
-    overflow-y: scroll;
-    padding-top: 20px;
+    position: fixed;
+    top: calc(var(--header-height) + var(--total-height) + var(--filters-height) + var(--filter-count-height) + 10px);
+    bottom: var(--bottom-height);
+    left: 0;
+    right: 0;
+    overflow-y: auto;
+    padding: 10px;
+    margin: 0;
+}
+.list-group > li {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.list-group .item.loading {
+    background: #2a2a2a !important;
+    border: 2px solid #ffd700 !important;
+    border-radius: 8px !important;
+    padding: 20px !important;
+    margin: 10px 0 !important;
+    text-align: center !important;
+    color: #ffd700 !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+}
+.list-group-item {
+    background: transparent !important;
+    border: 1px solid #666 !important;
+    border-radius: 4px !important;
+    padding: 8px 12px !important;
+    margin-bottom: 4px !important;
+    color: white !important;
+    transition: all 0.2s !important;
+    word-wrap: break-word !important;
+    white-space: normal !important;
+    text-align: left !important;
+}
+/* ===== FORÇA COR VERMELHA EM COMPONENTES RAROS ===== */
+.list-group-item.rare-component,
+.rare-component,
+li.list-group-item.rare-component,
+li.rare-component {
+    color: #ff0000 !important;
+    font-weight: bold !important;
+    text-shadow: 0 0 2px rgba(255, 0, 0, 0.5) !important;
+}
+
+/* Garante que a cor vermelha tenha prioridade máxima */
+.list-group-item.rare-component .item-text,
+.rare-component .item-text {
+    color: #ff4444 !important;
+}
+
+/* Remove qualquer possível sobrescrita */
+.list-group-item {
+    color: white !important;
+}
+
+.list-group-item.rare-component {
+    color: #ff4444 !important;
+}
+
+/* Para garantir que o emoji também fique vermelho */
+.rare-component .totals-emoji,
+.rare-component .totals-label,
+.rare-component .totals-value {
+    color: #ff4444 !important;
+}
+.list-group-item:hover {
+    background-color: #333333 !important;
+    border-color: #574930 !important;
 }
 
 .list-group::-webkit-scrollbar {
-    display: none;
+    width: 8px;
+    border-radius: 4px;
+
 }
 
-/* ===== HEADER ===== */
+.list-group::-webkit-scrollbar-track {
+    background: none;
+    border-radius: 4px;
+}
+
+.list-group::-webkit-scrollbar-thumb {
+    background: #ffd700;
+    border-radius: 4px;
+}
+.list-group {
+    scrollbar-width: thin;
+    scrollbar-color: #ffd700 #2a2a2a;
+}
+.list-group::-webkit-scrollbar-button {
+    display: none !important;
+    height: 0 !important;
+    width: 0 !important;
+}
+/* ===== HEADER (Drop History) ===== */
 .header {
     text-align: center;
-    background: url(https://runeapps.org/nis/alt1-currentskin/nisbutton.png) 0px -100%/24px 400% repeat content-box;
-    background-color: black;
-    color: #422d00;
+    color: rgb(0, 0, 0);  
     font-family: 'trajan-pro-3', 'Arial', sans-serif;
-    font-size: 1.2em;
-    padding: 10px 0;
     position: fixed;
-    top: 10px;
-    width: 100%;
-    z-index: 1;
-    cursor: pointer;
-    border: 2px solid #f57c01;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    top: 5px;
+    left: -5px;
+    width: calc(100% + 5px);
+    min-width: 80px !important;
+    font-size: 12pt !important;
+    white-space: nowrap !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    height: var(--header-height);
+    line-height: var(--header-height);
+    background-color: #1a1a1a;
+    z-index: 1000;
 }
 
-.header:hover {
-    color: #ffffff;
-    border-bottom-color: #745900;
-}
-
-/* ===== TOTAL ===== */
+/* ===== TOTAL DROPS ===== */
 .total {
     text-align: center;
     color: rgb(255, 213, 27);
     font-weight: bold;
     font-size: 1.5em;
-    margin-top: 25px;
-    padding: 15px;
+    position: fixed;
+    top: calc(var(--header-height) + 5px);
+    left: 0;
+    width: 100%;
+    z-index: 999;
+    border-bottom: 1px solid #444;
+    border-top: 1px solid #444;
+    margin: 0;
+    box-sizing: border-box;
+    height: var(--total-height);
+    line-height: var(--total-height);
+    background-color: #1a1a1a;
+}
+
+
+/* ===== FILTROS (BOTÕES) ===== */
+.filters-container {
+    position: fixed;
+    top: calc(var(--header-height) + var(--total-height) + 5px);
+    left: 0;
+    width: 100%;
+    background-color: #1a1a1a;
+    z-index: 998;
+    border-bottom: 1px solid #574930;
+    box-sizing: border-box;
+    height: var(--filters-height);
+    padding: 0; /* Remove o padding para os botões ficarem encostados nas bordas */
+    display: flex;
+}
+
+/* Container dos botões - TODOS NA MESMA LINHA, SEM GAP */
+.filters-wrapper {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr); /* 6 colunas iguais */
+    gap: 0; /* SEM ESPAÇO entre os botões */
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Estilo dos botões */
+.filter-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%; /* Ocupa toda a altura do container */
+    padding: 0; /* Remove padding interno para melhor centralização */
+    border: 1px solid #574930;
+    border-radius: 0; /* Remove bordas arredondadas para ficar encostado */
+    background-color: #1a1a1a;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 11px;
+    line-height: 1.3;
+    text-align: center;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.filter-btn:hover {
+    background-color: #92775379;
+    border-color: #ffd700;
+}
+
+.filter-btn.active {
+    background-color: #574930;
+    border-color: #ffd700;
+    color: #ffd700;
+    font-weight: bold;
+    box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+/* ===== CONTAGEM DOS FILTERS (ÁREA DE 20px) ===== */
+.filter-count {
+    position: fixed;
+    top: calc(var(--header-height) + var(--total-height) + var(--filters-height) + 5px);
+    left: 0;
+    width: 100%;
+    height: var(--filter-count-height);
+    background-color: #2a2a2a;
+    border-bottom: 1px solid #574930;
+    z-index: 997;
+    text-align: center;
+    font-size: 11px;
+    color: #ffd700;
+    line-height: var(--filter-count-height);
+    font-weight: bold;
+}
+
+.filter-count span {
+    color: #fff;
+}
+
+/* ===== FOOTER ===== */
+.fixed-bottom {
+    background: url(background.png);
+    border-bottom: 1px solid #574930;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--bottom-height);
+    padding: 8px 10px;
+    z-index: 1000;
+    margin: 0;
+    background-color: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.fixed-bottom .nisbutton {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    font-size: 8pt !important;
+    flex: 3; /* Ocupa 3 partes do espaço */
+    margin: 0;
+}
+
+.version-row {
+    text-align: center;
+    padding: 0;
+    flex: 1; /* Ocupa 1 parte do espaço */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.version-text {
+    color: #ffd700 !important;
+    opacity: 0.6;
+    font-size: 10px;
+    line-height: 1.2;
+}
+
+/* ===== TOTALS (CONTADORES DENTRO DO MODAL) ===== */
+.totals-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    padding: 1px;
+    background: url(background.png);
+    border-bottom: 2px solid #574930;
+    border-radius: 4px;
+    margin: 10px 0;
+    gap: 0;
+}
+
+.totals-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1; /* Todos ocupam o mesmo espaço */
+    min-width: 0; /* Permite encolher */
+    padding: 8px 0; /* Apenas padding vertical */
+    border: none; /* Remove borda individual */
+    background-color: #1a1a1a;
+    margin: 0;
+    position: relative;
+}
+.totals-item:not(:first-child)::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 10%;
+    height: 80%;
+    width: 1px;
+    background-color: #574930;
+}
+
+.totals-item:first-child::before {
+    display: none;
+}
+.totals-emoji {
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.totals-label {
+    color: #ffd700;
+    font-weight: bold;
+    font-size: 10px;
+    margin-bottom: 3px;
+    white-space: nowrap;
+}
+
+.totals-value {
+    color: #dba800;
+    font-weight: bold;
+    font-size: 10px;
 }
 
 /* ===== RING ICONS ===== */
@@ -110,42 +382,15 @@ body.nis {
     min-width: 20px !important;
 }
 
-.lotd-color {
-    color: #f57c01;
-    font-weight: bold;
-    font-size: 1.2em;
-    margin-right: 5px;
-}
-
-.hazelmere-color {
-    color: #ffd700;
-    font-weight: bold;
-    font-size: 1.2em;
-    margin-right: 5px;
-}
-
 /* ===== MODAL ===== */
 .modal-body,
 .modal-header,
 .modal-footer {
-    background-image: url('https://runeapps.org/nis/alt1-currentskin/background.png') !important;
+    background-image: url("background.png");
     background-blend-mode: overlay !important;
     background-color: #777777;
     color: white;
-    border: 2px solid #ffd700;
-}
-
-/* ===== LEGEND CONTAINER ===== */
-.legend-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: 30px;
-    padding: 10px;
-    background: #2a2a2a;
-    border-radius: 4px;
-    border: 1px solid #444;
+    border: 1px solid #574930;
 }
 
 /* ===== TEXT MUTED ===== */
@@ -153,24 +398,11 @@ body.nis {
     color: #b4b4b4 !important;
 }
 
-/* ===== WARNING & DANGER ===== */
-.warning {
-    background-color: #ffaa00;
-    color: black;
-    font-weight: bold;
-}
-
-.danger {
-    background-color: #dc3545;
-    color: white;
-    font-weight: bold;
-}
-
 /* ===== CHAT SELECTOR ===== */
 .chat-selector {
     background-color: #2a2a2a;
     color: white;
-    border: 2px solid #444;
+    border: 1px solid #574930;
     border-radius: 4px;
     padding: 5px;
     margin: 5px 0;
@@ -179,33 +411,6 @@ body.nis {
 
 .chat-selector:hover {
     border-color: #ffd700;
-}
-
-/* ===== BUTTONS ===== */
-.button {
-    background-color: #ffd000;
-    color: white;
-    border: 2px solid #444;
-    border-radius: 4px;
-    padding: 8px 16px;
-    margin: 5px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: 'trajan-pro-3', 'Arial', sans-serif;
-}
-
-.button:hover {
-    border-color: #ffd700;
-    background-color: #3a3a3a;
-}
-
-.button.primary {
-    border-color: #f57c01;
-}
-
-.button.primary:hover {
-    background-color: #f57c01;
-    color: black;
 }
 
 /* ===== BTN CLOSE ===== */
@@ -221,27 +426,6 @@ body.nis {
     transform: scale(1.2) !important;
 }
 
-/* ===== TOTALS CONTAINER ===== */
-.totals-container {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    background-color: #2a2a2a;
-    border: 2px solid #444;
-    border-radius: 4px;
-    margin: 10px 0;
-}
-
-.totals-label {
-    color: #ffd700;
-    font-weight: bold;
-}
-
-.totals-value {
-    color: #00ffff;
-    font-weight: bold;
-}
-
 /* ===== TOOLTIPS ===== */
 .item-tooltip {
     background-color: #2a2a2a;
@@ -255,12 +439,11 @@ body.nis {
 
 /* ===== CUSTOM PHRASES ===== */
 .phrases-details,
-.webhook-details
-    {
+.webhook-details {
     background: #2a2a2a;
     padding: 10px;
     border-radius: 4px;
-    border: 1px solid #444;
+    border: 1px solid #574930;
 }
 
 .phrases-details summary {
@@ -284,11 +467,10 @@ body.nis {
 }
 
 /* ===== WEBHOOK ===== */
-
-.form-control  {
+.form-control {
     background: #7e7e7e !important;
     color: white !important;
-    border: 1px solid #444 !important;
+    border: 1px solid #574930;
     font-family: monospace !important;
 }
 
@@ -301,44 +483,6 @@ body.nis {
 .tooltip-ring {
     display: inline-block;
     margin-right: 5px;
-}
-
-.totals-container {
-    display: flex;
-    justify-content: space-around;  /* Distribui igualmente */
-    align-items: center;            /* Centraliza verticalmente */
-    text-align: center;
-    padding: 15px;
-    background-color: #2a2a2a;
-    border: 2px solid #444;
-    border-radius: 4px;
-    margin: 10px 0;
-}
-
-.totals-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;            /* Centraliza cada item */
-    flex: 1;                        /* Todos com mesmo tamanho */
-    min-width: 60px;
-}
-
-.totals-emoji {
-    font-size: 24px;
-    margin-bottom: 5px;
-}
-
-.totals-label {
-    color: #ffd700;
-    font-weight: bold;
-    font-size: 12px;
-    margin-bottom: 3px;
-}
-
-.totals-value {
-    color: #a37d00;
-    font-weight: bold;
-    font-size: 16px;
 }
 
 /* ===== ANIMAÇÕES ===== */
@@ -356,21 +500,4 @@ body.nis {
     overflow-y: scroll;
     max-height: 75vh;
     margin-top: 8px;
-}
-
-/* ===== RESPONSIVIDADE ===== */
-@media (max-width: 600px) {
-    .header {
-        font-size: 14px;
-    }
-    
-    .list-group-item {
-        font-size: 12px;
-        padding: 4px 8px;
-    }
-    
-    .button {
-        padding: 6px 12px;
-        font-size: 12px;
-    }
 }

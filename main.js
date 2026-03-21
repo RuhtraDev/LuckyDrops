@@ -55,7 +55,7 @@ var __importStar = (this && this.__importStar) || (function () {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _a;
+var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const a1lib = __importStar(__webpack_require__(/*! alt1 */ "../node_modules/alt1/dist/base/index.js"));
 const chatbox_1 = __importDefault(__webpack_require__(/*! alt1/chatbox */ "../node_modules/alt1/dist/chatbox/index.js"));
@@ -64,6 +64,16 @@ __webpack_require__(/*! ./icon.png */ "./icon.png");
 // ===== CONSTS =====
 const APP_NAME = "LuckyDrops";
 const timestampRegex = /\[\d{2}:\d{2}:\d{2}\]/g;
+const RARE_COMPONENTS = [
+    "Brassican", "Knightly", "Dragonfire", "Fungal", "Explosive",
+    "Corporeal", "Armadyl", "Bandos", "Saradomin", "Seren", "Zamorak",
+    "Zaros", "Resilient", "Silent", "Noxious", "Rumbling", "Pestiferous",
+    "Third-age", "Culinary", "Shifting", "Harnessed", "Oceanic",
+    "Ascended", "Undead", "Avernic", "Shadow", "Ilujankan", "Cywir",
+    "Faceted", "Clockwork", "Fortunate", "Manufactured", "Ecliptic"
+];
+// ===== VARIÁVEL DE FILTRO ATUAL =====
+let currentFilter = "all"; // "all", "LOTD", "HSR", "BEAM", "SEREN", "COMPS"
 // ===== VISUAL DEBUG =====
 const DEBUG_MODE = false; // Change to view log
 let debugDiv = null;
@@ -83,7 +93,7 @@ function debug(msg) {
         const line = document.createElement('div');
         line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
         debugDiv.appendChild(line);
-        debugDiv.scrollTop = debugDiv.scrollHeight;
+        // NÃO FAZER SCROLL AUTOMÁTICO
     }
 }
 // ===== DOM ELEMENTS =====
@@ -93,21 +103,25 @@ const exportButton = document.querySelector(".export");
 const clearButton = document.querySelector(".clear");
 const listHeader = document.querySelector(".header");
 const itemTotal = document.getElementById("total");
+const totalCountDisplay = document.getElementById("totalCount");
 const appColor = a1lib.mixColor(0, 255, 255);
 const reader = new chatbox_1.default();
 const appName = "LuckyDrops";
 // ===== COLOR CONFIG =====
 reader.readargs = {
     colors: [
-        a1lib.mixColor(255, 112, 0), // LOTD & HSR
-        a1lib.mixColor(245, 151, 0), // Feixe
-        a1lib.mixColor(0, 255, 255), // Seren
+        a1lib.mixColor(255, 255, 255), // Branco (texto fixo)
+        a1lib.mixColor(255, 112, 0), // LOTD & HSR (laranja)
+        a1lib.mixColor(245, 151, 0), // Feixe (laranja mais claro)
+        a1lib.mixColor(0, 255, 255), // Seren (ciano)
+        a1lib.mixColor(255, 165, 0), // COMPONENTS (laranja)
+        a1lib.mixColor(255, 0, 0) // Vermelho (componentes raros)
     ]
 };
 // ===== UPDATE COUNT IN MODAL =====
 function updateCounters() {
     const data = getSaveData("data") || [];
-    let lotd = 0, hsr = 0, feixe = 0, seren = 0;
+    let lotd = 0, hsr = 0, feixe = 0, seren = 0, comps = 0;
     data.forEach((item) => {
         if (item.type === "LOTD")
             lotd++;
@@ -117,11 +131,14 @@ function updateCounters() {
             feixe++;
         else if (item.type === "SEREN")
             seren++;
+        else if (item.type === "COMPS")
+            comps++;
     });
     const lotdEl = document.getElementById("lotdCount");
     const hsrEl = document.getElementById("hazelmereCount");
     const feixeEl = document.getElementById("feixeCount");
     const serenEl = document.getElementById("serenCount");
+    const compsEl = document.getElementById("compsCount");
     if (lotdEl)
         lotdEl.textContent = String(lotd);
     if (hsrEl)
@@ -130,33 +147,26 @@ function updateCounters() {
         feixeEl.textContent = String(feixe);
     if (serenEl)
         serenEl.textContent = String(seren);
+    if (compsEl)
+        compsEl.textContent = String(comps);
 }
 // ===== CACHE DE DROPS POR MINUTO =====
-const dropsCache = new Map(); // Guarda também o tipo
-// Limpa o cache a cada 2 minutos
+const dropsCache = new Map(); // Adiciona timestamp numérico
+// Limpa apenas entradas antigas do cache (mais de 2 minutos)
 setInterval(() => {
-    dropsCache.clear();
-    debug("🧹 Cache de drops limpo");
-}, 120000);
-// ===== FUNÇÃO PARA VERIFICAR SE DROP JÁ EXISTE =====
-function isDuplicateDrop(itemName, chatLine, currentType) {
-    // Extrai o timestamp
-    let timeMatch = chatLine.match(/\[(\d{2}:\d{2}:\d{2})\]/);
-    if (!timeMatch)
-        return false;
-    let currentTime = timeMatch[1];
-    let minuteKey = currentTime.substring(0, 5); // HH:MM
-    let cacheKey = `${itemName}:${minuteKey}`;
-    // Verifica no cache
-    if (dropsCache.has(cacheKey)) {
-        let cached = dropsCache.get(cacheKey);
-        debug(`🔍 Cache: ${itemName} já registrado como ${cached === null || cached === void 0 ? void 0 : cached.type} às ${minuteKey}`);
-        return true;
+    const now = Date.now();
+    let removed = 0;
+    for (let [key, value] of dropsCache.entries()) {
+        // Se o registro tem mais de 2 minutos (120000 ms)
+        if (now - value.timestamp > 120000) {
+            dropsCache.delete(key);
+            removed++;
+        }
     }
-    // Se não está no cache, adiciona
-    dropsCache.set(cacheKey, { type: currentType, time: currentTime });
-    return false;
-}
+    if (removed > 0) {
+        debug(`🧹 Cache limpo: ${removed} entradas removidas, ${dropsCache.size} restantes`);
+    }
+}, 60000); // Verifica a cada minuto
 // ===== DEFAULT PHRASES =====
 const DEFAULT_PHRASES = [
     // LOTD
@@ -168,7 +178,10 @@ const DEFAULT_PHRASES = [
     "Your Hazelmere's signet ring shines brightly. You receive: (\\d+) x (.*)",
     "The power of Hazelmere blesses your drop and doubles it before your very eyes: (\\d+) x (.*)",
     // SEREN
-    "The Seren spirit gifts you: (\\d+) x (.*)"
+    "The Seren spirit gifts you: (\\d+) x (.*)",
+    // COMPONENTS
+    "Materials gained: (\\d+) x (.*)",
+    "Your Scavenging perk adds: (\\d+) x (.*)"
 ];
 // ===== DROPS RESET =====
 const factoryResetBtn = document.getElementById("factoryResetBtn");
@@ -260,49 +273,120 @@ function getSaveData(key) {
     let data = JSON.parse(localStorage.getItem(appName) || "null");
     return (_a = data === null || data === void 0 ? void 0 : data[key]) !== null && _a !== void 0 ? _a : false;
 }
-// ===== MAIN FUNCTION =====
+// ===== FUNÇÃO PARA VERIFICAR SE DROP JÁ EXISTE =====
+function isDuplicateDrop(itemName, chatLine, currentType) {
+    // Extrai o timestamp
+    let timeMatch = chatLine.match(/\[(\d{2}:\d{2}:\d{2})\]/);
+    if (!timeMatch)
+        return false;
+    let currentTime = timeMatch[1];
+    let minuteKey = currentTime.substring(0, 5); // HH:MM
+    let cacheKey = `${itemName}:${minuteKey}`;
+    // Verifica no cache
+    if (dropsCache.has(cacheKey)) {
+        let cached = dropsCache.get(cacheKey);
+        debug(`🔍 Cache HIT: ${itemName} já registrado como ${cached === null || cached === void 0 ? void 0 : cached.type} às ${minuteKey}`);
+        return true;
+    }
+    // Se não está no cache, adiciona com timestamp atual
+    dropsCache.set(cacheKey, {
+        type: currentType,
+        time: currentTime,
+        timestamp: Date.now() // Adiciona timestamp numérico
+    });
+    debug(`💚 Cache MISS: ${itemName} adicionado ao cache como ${currentType} às ${minuteKey}`);
+    return false;
+}
+function debugCache() {
+    if (dropsCache.size > 0) {
+        debug(`📊 Cache atual (${dropsCache.size} entradas):`);
+        for (let [key, value] of dropsCache.entries()) {
+            debug(`   ${key} -> ${value.type} (${new Date(value.timestamp).toLocaleTimeString()})`);
+        }
+    }
+    else {
+        debug(`📊 Cache vazio`);
+    }
+}
 function readChatbox() {
-    var _a, _b;
+    var _a;
     let opts = reader.read() || [];
     if (opts.length === 0)
         return;
-    debug(`📖 Lendo chat... ${opts.length} line`);
-    let chatStr = "";
+    debug(`📖 Lendo chat... ${opts.length} segmentos`);
+    // DEBUG: Mostrar todos os segmentos brutos
     for (let i = 0; i < opts.length; i++) {
-        if (!((_a = opts[i].text) === null || _a === void 0 ? void 0 : _a.match(timestampRegex)) && i === 0)
-            continue;
-        if ((_b = opts[i].text) === null || _b === void 0 ? void 0 : _b.match(timestampRegex)) {
-            if (i > 0)
-                chatStr += "\n";
-            chatStr += opts[i].text + " ";
-        }
-        else {
-            chatStr += opts[i].text;
+        const segment = opts[i];
+        debug(`  Segmento ${i}: y=${segment.y}, text="${(_a = segment.text) === null || _a === void 0 ? void 0 : _a.substring(0, 50)}"`);
+    }
+    // PASSO 1: Se muitos segmentos têm y undefined, usa abordagem alternativa
+    let hasValidY = opts.some(seg => seg.y !== undefined && seg.y !== null);
+    let allMessages = [];
+    if (!hasValidY) {
+        debug("⚠️ Nenhum segmento com Y válido, usando abordagem alternativa");
+        // Abordagem alternativa: simplesmente juntar todos os textos
+        let fullText = opts.map(seg => seg.text || "").join(" ");
+        // Dividir por timestamps
+        let parts = fullText.split(/(?=\[\d{2}:\d{2}:\d{2}\])/);
+        for (let part of parts) {
+            let message = part.trim();
+            if (message && message.match(/\[\d{2}:\d{2}:\d{2}\]/) && message.length > 15) {
+                message = message.replace(/\s+/g, ' ').trim();
+                allMessages.push(message);
+                debug(`  📌 Mensagem: "${message}"`);
+            }
         }
     }
-    if (!chatStr.trim()) {
-        debug("⚠️ No line with timestamp");
-        return;
+    else {
+        debug(`✅ ${opts.filter(seg => seg.y !== undefined).length} segmentos com Y válido`);
+        // Abordagem normal: agrupar por Y
+        let linesMap = new Map();
+        for (let i = 0; i < opts.length; i++) {
+            const segment = opts[i];
+            if (!segment.text)
+                continue;
+            // Só agrupa se tiver Y válido
+            if (segment.y !== undefined && segment.y !== null) {
+                const y = segment.y;
+                const currentText = linesMap.get(y) || "";
+                linesMap.set(y, currentText + (currentText ? " " : "") + segment.text);
+            }
+            else {
+                // Se não tem Y, trata como linha separada
+                debug(`  ⚠️ Segmento sem Y: "${segment.text.substring(0, 30)}"`);
+                allMessages.push(segment.text.trim());
+            }
+        }
+        // Processar linhas agrupadas por Y
+        for (let [y, lineText] of linesMap.entries()) {
+            let parts = lineText.split(/(?=\[\d{2}:\d{2}:\d{2}\])/);
+            for (let part of parts) {
+                let message = part.trim();
+                if (message && message.match(/\[\d{2}:\d{2}:\d{2}\]/) && message.length > 15) {
+                    message = message.replace(/\s+/g, ' ').trim();
+                    allMessages.push(message);
+                    debug(`  📌 Mensagem Y=${y}: "${message}"`);
+                }
+            }
+        }
     }
-    let chatLines = chatStr.trim().split("\n");
-    debug(`📝 ${chatLines.length} processeds lines`);
-    // ===== PROCESS EACH LINE =====
-    for (let line of chatLines) {
-        let chatLine = line.trim();
-        debug(`📄 Line: "${chatLine.substring(0, 100)}${chatLine.length > 100 ? '...' : ''}"`);
+    debug(`📨 Total de ${allMessages.length} mensagens encontradas`);
+    // PASSO 2: Processar cada mensagem
+    for (let chatLine of allMessages) {
+        debug(`\n📄 Processando: "${chatLine}"`);
         if (isInHistory(chatLine)) {
-            debug(`⏭️ Processed`);
+            debug(`⏭️ Já processada`);
             continue;
         }
         let salvo = false;
-        // ===== 1. DETECTAR POR PALAVRAS-CHAVE (MAIS FLEXÍVEL) =====
+        // ===== DETECÇÃO POR PALAVRAS-CHAVE =====
         // LOTD
         if (!salvo && chatLine.includes("Luck") && chatLine.includes("Dwarves")) {
             debug("💍 LOTD detected");
-            let match = chatLine.match(/receive:? (\d+) x (.*)/i);
+            let match = chatLine.match(/receive:?\s*(\d+)\s*x\s*(.+)/i);
             if (match) {
                 let qty = parseInt(match[1]);
-                let item = match[2].trim();
+                let item = match[2].trim().replace(/[.!?]$/, '');
                 if (isDuplicateDrop(item, chatLine, "LOTD")) {
                     debug(`⏭️ Drop duplicated (LOTD): ${item}`);
                     salvo = true;
@@ -325,13 +409,13 @@ function readChatbox() {
                 }
             }
         }
-        // FEIXE
+        // BEAM
         if (!salvo && chatLine.includes("golden") && chatLine.includes("beam")) {
-            debug("✨ BEAM detectado");
-            let match = chatLine.match(/receive:? (\d+) x (.*)/i);
+            debug("✨ BEAM detected");
+            let match = chatLine.match(/receive:?\s*(\d+)\s*x\s*(.+)/i);
             if (match) {
                 let qty = parseInt(match[1]);
-                let item = match[2].trim();
+                let item = match[2].trim().replace(/[.!?]$/, '');
                 if (isDuplicateDrop(item, chatLine, "BEAM")) {
                     debug(`⏭️ Drop duplicated (BEAM): ${item}`);
                     salvo = true;
@@ -357,11 +441,11 @@ function readChatbox() {
         // SEREN
         if (!salvo && chatLine.includes("Seren") && chatLine.includes("spirit")) {
             debug("💎 SEREN detected");
-            let match = chatLine.match(/gifts you:? (\d+) x (.*)/i);
+            let match = chatLine.match(/gifts you:?\s*(\d+)\s*x\s*(.+)/i);
             if (match) {
                 let qty = parseInt(match[1]);
                 let item = match[2].trim();
-                item = item.replace(/\.?\s*The gift is sent to your bank\.?$/i, '');
+                item = item.replace(/\.?\s*The gift is sent to your bank\.?$/i, '').replace(/[.!?]$/, '');
                 if (isDuplicateDrop(item, chatLine, "SEREN")) {
                     debug(`⏭️ Drop duplicated (SEREN): ${item}`);
                     salvo = true;
@@ -387,10 +471,10 @@ function readChatbox() {
         // HAZELMERE
         if (!salvo && chatLine.includes("Hazelmere")) {
             debug("🔱 HAZELMERE detected");
-            let match = chatLine.match(/receive:? (\d+) x (.*)/i);
+            let match = chatLine.match(/receive:?\s*(\d+)\s*x\s*(.+)/i);
             if (match) {
                 let qty = parseInt(match[1]);
-                let item = match[2].trim();
+                let item = match[2].trim().replace(/[.!?]$/, '');
                 let type = chatLine.includes("doubles") ? "HSR_DOUBLE" : "HSR";
                 if (isDuplicateDrop(item, chatLine, type)) {
                     debug(`⏭️ Duplicated Drop (HAZELMERE): ${item}`);
@@ -414,16 +498,49 @@ function readChatbox() {
                 }
             }
         }
-        // ===== 2. SE NÃO DETECTOU POR PALAVRA, TENTA FRASES PERSONALIZADAS =====
+        // COMPONENTS (Scavenging)
+        if (!salvo && (chatLine.includes("Materials gained:") || chatLine.includes("Scavenging perk adds:"))) {
+            debug("💡 COMPONENTS detected");
+            let match = chatLine.match(/(?:Materials gained:|Your Scavenging perk adds:)\s*(\d+)\s*x\s*(.+)/i);
+            if (match) {
+                let qty = parseInt(match[1]);
+                let item = match[2].trim().replace(/[.!?]$/, '');
+                debug(`  → Quantidade: ${qty}, Item: "${item}"`);
+                if (isDuplicateDrop(item, chatLine, "COMPS")) {
+                    debug(`⏭️ Component duplicated: ${item}`);
+                    salvo = true;
+                }
+                else {
+                    let displayName = item.replace(/\s+components?$/i, '');
+                    // Verifica se é um componente raro
+                    let isRare = RARE_COMPONENTS.includes(displayName);
+                    let dropItem = {
+                        item: `${qty} x ${displayName}`,
+                        quantity: qty,
+                        name: displayName,
+                        type: "COMPS",
+                        isRare: isRare, // Adiciona flag de raridade
+                        time: new Date(),
+                        chatLine
+                    };
+                    updateSaveData({ data: dropItem });
+                    updateChatHistory(chatLine);
+                    showItems();
+                    sendDiscordNotification(dropItem);
+                    debug(`💾 COMPONENTS SAVE! ${qty} x ${item} -> ${displayName}${isRare ? ' ⚡ RARO!' : ''}`);
+                    salvo = true;
+                }
+            }
+        }
+        // ===== FRASES PERSONALIZADAS =====
         if (!salvo) {
             let phrases = JSON.parse(localStorage.getItem(`${appName}_phrases`) || "null") || DEFAULT_PHRASES;
             for (let phrase of phrases) {
-                // Cria regex da frase
                 let pattern = phrase
                     .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
                     .replace(/\\\(\\d\+\\\\\)/g, '(\\d+)')
                     .replace(/\\\(\.\+\\\\\)/g, '(.*)');
-                let regex = new RegExp(`\\[\\d{2}:\\d{2}:\\d{2}\\] ${pattern}`);
+                let regex = new RegExp(`^\\[\\d{2}:\\d{2}:\\d{2}\\] ${pattern}`);
                 let match = chatLine.match(regex);
                 if (match) {
                     let type = "CUSTOM";
@@ -436,14 +553,12 @@ function readChatbox() {
                     else if (phrase.includes("Seren"))
                         type = "SEREN";
                     let qty = parseInt(match[1]);
-                    let item = match[2].trim();
-                    // ===== VERIFICAÇÃO DE DUPLICATA PARA FRASES =====
+                    let item = match[2].trim().replace(/[.!?]$/, '');
                     if (isDuplicateDrop(item, chatLine, type)) {
                         debug(`⏭️ Drop por frase duplicado ignorado (${type}): ${item}`);
                         salvo = true;
                         break;
                     }
-                    // ============================================
                     debug(`🎉 DROP por frase! ${type}: ${qty} x ${item}`);
                     let dropItem = {
                         item: `${qty} x ${item}`,
@@ -456,7 +571,7 @@ function readChatbox() {
                     updateSaveData({ data: dropItem });
                     updateChatHistory(chatLine);
                     showItems();
-                    sendDiscordNotification(dropItem); // Adiciona notificação Discord
+                    sendDiscordNotification(dropItem);
                     salvo = true;
                     break;
                 }
@@ -470,38 +585,166 @@ function readChatbox() {
 function showItems() {
     if (!itemList)
         return;
-    itemList.querySelectorAll("li.item:not(.header):not(.total)").forEach(el => el.remove());
+    itemList.querySelectorAll("li.item:not(.header):not(.total):not(.filters-container)").forEach(el => el.remove());
     let data = getSaveData("data") || [];
-    itemTotal.innerHTML = String(data.length);
+    // Atualiza o total principal
+    const totalElement = document.getElementById("total");
+    if (totalElement) {
+        totalElement.textContent = String(data.length);
+    }
+    // Atualiza o totalCount na área de filtros
+    const totalCountElement = document.getElementById("totalCount");
+    if (totalCountElement) {
+        totalCountElement.textContent = String(data.length);
+    }
     let mode = getSaveData("mode");
+    // Filtrar dados se não for "all"
+    let filteredData = data;
+    if (currentFilter !== "all") {
+        if (currentFilter === "HSR") {
+            filteredData = data.filter((item) => item.type.includes("HSR"));
+        }
+        else {
+            filteredData = data.filter((item) => item.type === currentFilter);
+        }
+    }
     if (mode === "total") {
         listHeader.innerHTML = "Drop Totals";
         listHeader.dataset.show = "history";
         let totals = {};
-        data.forEach((item) => {
+        filteredData.forEach((item) => {
             if (!totals[item.name])
-                totals[item.name] = { total: 0, lotd: 0, hsr: 0 };
+                totals[item.name] = { total: 0, lotd: 0, hsr: 0, beam: 0, seren: 0, comps: 0 };
             totals[item.name].total += item.quantity;
             if (item.type === "LOTD")
                 totals[item.name].lotd += item.quantity;
             else if (item.type.includes("HSR"))
                 totals[item.name].hsr += item.quantity;
+            else if (item.type === "BEAM")
+                totals[item.name].beam += item.quantity;
+            else if (item.type === "SEREN")
+                totals[item.name].seren += item.quantity;
+            else if (item.type === "COMPS")
+                totals[item.name].comps += item.quantity;
         });
         Object.keys(totals).sort().forEach(n => {
             let t = totals[n];
-            itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item">${n}: ${t.total} (💍:${t.lotd} | 🔱:${t.hsr})</li>`);
+            // Define o emoji com base no filtro atual
+            let emoji = "";
+            if (currentFilter === "LOTD")
+                emoji = "💍";
+            else if (currentFilter === "HSR")
+                emoji = "🔱";
+            else if (currentFilter === "BEAM")
+                emoji = "✨";
+            else if (currentFilter === "SEREN")
+                emoji = "💎";
+            else if (currentFilter === "COMPS")
+                emoji = "💡";
+            else
+                emoji = ""; // Sem filtro, não mostra emoji na frente
+            // Para componentes raros no modo COMPS
+            let isRareComponent = RARE_COMPONENTS.indexOf(n) !== -1;
+            let itemStyle = (currentFilter === "COMPS" && isRareComponent) ? ' style="color: #ff4444; font-weight: bold;"' : '';
+            let rareIcon = (currentFilter === "COMPS" && isRareComponent) ? "🔴" : "";
+            // Mostra apenas a quantidade do tipo filtrado
+            let quantity = 0;
+            if (currentFilter === "LOTD")
+                quantity = t.lotd;
+            else if (currentFilter === "HSR")
+                quantity = t.hsr;
+            else if (currentFilter === "BEAM")
+                quantity = t.beam;
+            else if (currentFilter === "SEREN")
+                quantity = t.seren;
+            else if (currentFilter === "COMPS")
+                quantity = t.comps;
+            else
+                quantity = t.total; // Sem filtro, mostra total
+            // Só mostra se tiver quantidade > 0
+            if (quantity > 0) {
+                let displayText = currentFilter === "all"
+                    ? `${n}: ${quantity}` // Sem filtro: só nome e quantidade
+                    : `${emoji} ${rareIcon}${n}: ${quantity}`; // Com filtro: emoji + nome + quantidade
+                itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item"${itemStyle}>${displayText}</li>`);
+            }
         });
     }
     else {
+        // ===== MODO HISTORY =====
         listHeader.innerHTML = "Drop History";
         listHeader.dataset.show = "total";
-        data.slice().reverse().forEach((item) => {
-            let icon = item.type === "LOTD" ? "💍" : item.type.includes("HSR") ? "🔱" : "✨";
-            itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item" title="${new Date(item.time).toLocaleString()}">${icon} ${item.item}</li>`);
+        filteredData.slice().reverse().forEach((item) => {
+            // Define o ícone base
+            let icon = item.type === "LOTD" ? "💍" :
+                item.type.includes("HSR") ? "🔱" :
+                    item.type === "BEAM" ? "✨" :
+                        item.type === "SEREN" ? "💎" :
+                            item.type === "COMPS" ? (item.isRare ? "🔴💡" : "💡") : "📦";
+            // Para componentes raros, adiciona estilo vermelho e negrito
+            let itemStyle = "";
+            let itemText = item.item;
+            if (item.type === "COMPS" && item.isRare) {
+                itemStyle = ' style="color: #ff4444; font-weight: bold;"';
+            }
+            let filterTag = "";
+            if (currentFilter !== "all") {
+                filterTag = ` [${item.type}]`;
+            }
+            itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item" title="${new Date(item.time).toLocaleString()}"${itemStyle}>${icon} ${itemText}${filterTag}</li>`);
         });
     }
+    // Se não houver resultados com o filtro
+    if (filteredData.length === 0) {
+        itemList.insertAdjacentHTML("beforeend", `<li class="list-group-item item" style="text-align: center; color: #666;">✨ No drops for this filter ✨</li>`);
+    }
     updateCounters();
+    // Atualizar contadores do modal também com filtro
+    updateFilteredCounters(filteredData);
 }
+// Nova função para atualizar contadores com filtro
+function updateFilteredCounters(filteredData) {
+    // Atualiza o totalFiltered com a quantidade filtrada
+    const totalFiltered = document.getElementById("totalFiltered");
+    if (totalFiltered) {
+        totalFiltered.textContent = String(filteredData.length);
+    }
+    // Atualiza o totalCount com o total geral (sem filtro)
+    const data = getSaveData("data") || [];
+    const totalCount = document.getElementById("totalCount");
+    if (totalCount) {
+        totalCount.textContent = String(data.length);
+    }
+}
+// ===== SETUP DOS FILTROS =====
+function setupFilters() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', function () {
+            // Remove active de todos
+            filterButtons.forEach(b => b.classList.remove('active'));
+            // Adiciona active no clicado
+            this.classList.add('active');
+            // Atualiza o filtro atual
+            currentFilter = this.dataset.filter || "all";
+            debug(`🔍 Filtrando por: ${currentFilter}`);
+            // Atualiza a lista
+            showItems();
+        });
+    });
+}
+function initFilters() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    if (filterButtons.length === 0) {
+        debug("⏳ Filtros não encontrados, tentando novamente em 500ms...");
+        setTimeout(initFilters, 500);
+        return;
+    }
+    debug(`✅ ${filterButtons.length} filtros encontrados, configurando...`);
+    setupFilters();
+}
+// Inicia a procura pelos filtros
+setTimeout(initFilters, 1000);
 // ===== INICIALIZAÇÃO DO CHAT (IGUAL ZEROGWAFA) =====
 window.setTimeout(() => {
     let findChat = setInterval(() => {
@@ -681,8 +924,9 @@ function sendDiscordNotification(dropItem) {
         return;
     const emoji = dropItem.type === "LOTD" ? "💍" :
         dropItem.type.includes("HSR") ? "🔱" :
-            dropItem.type === "FEIXE" ? "✨" :
-                dropItem.type === "SEREN" ? "💎" : "📦";
+            dropItem.type === "BEAM" ? "✨" :
+                dropItem.type === "SEREN" ? "💎" :
+                    dropItem.type === "COMPS" ? "💡" : "📦";
     const message = {
         username: "Lucky Drops Tracker",
         content: `${emoji} **${dropItem.type}** - ${dropItem.item} at ${new Date().toLocaleString()}`
@@ -735,7 +979,7 @@ function showConfirmModal(message, onConfirm) {
         box-shadow: 0 0 20px rgba(255,215,0,0.3);
     `;
     content.innerHTML = `
-        <div style="font-size: 24px; margin-bottom: 15px;">⚠️ WARNING?</div>
+        <div style="font-size: 24px; margin-bottom: 15px;">⚠️ WARNING</div>
         <div style="margin-bottom: 25px; font-size: 14px; white-space: pre-line;">${message}</div>
         <div style="display: flex; gap: 10px; justify-content: center;">
             <button class="nisbutton" id="confirmYes" style="background: #28a745; border-color: #ffd700;">✅ YES</button>
@@ -759,7 +1003,29 @@ function showConfirmModal(message, onConfirm) {
 if (!localStorage.getItem(appName)) {
     localStorage.setItem(appName, JSON.stringify({ chat: 0, data: [], mode: "history" }));
 }
-debug("✅ Inicializado");
+// Função para sincronizar todos os contadores
+function syncAllCounters() {
+    const data = getSaveData("data") || [];
+    const totalDrops = data.length;
+    // Atualiza o total principal (dentro do .total)
+    const totalElement = document.getElementById("total");
+    if (totalElement) {
+        totalElement.textContent = String(totalDrops);
+    }
+    // Atualiza o totalCount na área de filtros
+    const totalCountElement = document.getElementById("totalCount");
+    if (totalCountElement) {
+        totalCountElement.textContent = String(totalDrops);
+    }
+    // Atualiza o totalFiltered (inicialmente igual ao total)
+    const totalFilteredElement = document.getElementById("totalFiltered");
+    if (totalFilteredElement) {
+        totalFilteredElement.textContent = String(totalDrops);
+    }
+}
+// Chama a sincronização inicial
+syncAllCounters();
+debug(`✅ Inicializado com ${((_b = getSaveData("data")) === null || _b === void 0 ? void 0 : _b.length) || 0} drops`);
 
 
 /***/ },

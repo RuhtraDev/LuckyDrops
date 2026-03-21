@@ -12,8 +12,28 @@
 <body class="nis" >
     
     <ul class="itemList list-group">
-        <li class="list-group-item header" data-show="history" title="Click to switch">Lucky Drops Tracker</li>
+        <!-- Header -->
+        <button class="nisbutton w-100 header" data-show="history" title="Click to switch">Lucky Drops Tracker</button>
+        
+        <!-- Total Drops -->
         <li class="total">Total Drops: <span id="total">0</span></li>
+        
+        <!-- Filtros - TODOS NA MESMA LINHA -->
+        <li class="filters-container">
+            <div class="filters-wrapper">
+                <button class="filter-btn active" data-filter="all">📋<br>ALL</button>
+                <button class="filter-btn" data-filter="LOTD">💍<br>LOTD</button>
+                <button class="filter-btn" data-filter="HSR">🔱<br>HSR</button>
+                <button class="filter-btn" data-filter="BEAM">✨<br>BEAM</button>
+                <button class="filter-btn" data-filter="SEREN">💎<br>SEREN</button>
+                <button class="filter-btn" data-filter="COMPS">💡<br>COMPS</button>
+            </div>
+        </li>
+        
+        <!-- Área de contagem dos filters -->
+        <li class="filter-count">Mostrando: <span id="totalFiltered"></span> de <span id="totalCount">0</span> drops</li>
+    </ul>
+        
         <li class="list-group-item item loading">
             ⚠️ If you're reading this, the Chat Reader is not working ⚠️<br>
             Try:<br>
@@ -81,28 +101,31 @@
 
                     <!-- Totals -->
                     <div class="row mb-3">
-                        <div class="col-12">
-                            <div class="totals-container">
-                                <div class="totals-item">
-                                    <div class="totals-emoji">💍</div>
-                                    <div class="totals-label">LOTD</div>
-                                    <div class="totals-value" id="lotdCount">0</div>
-                                </div>
-                                <div class="totals-item">
-                                    <div class="totals-emoji">🔱</div>
-                                    <div class="totals-label">HSR</div>
-                                    <div class="totals-value" id="hazelmereCount">0</div>
-                                </div>
-                                <div class="totals-item">
-                                    <div class="totals-emoji">✨</div>
-                                    <div class="totals-label">BEAM</div>
-                                    <div class="totals-value" id="feixeCount">0</div>
-                                </div>
-                                <div class="totals-item">
-                                    <div class="totals-emoji">💎</div>
-                                    <div class="totals-label">SEREN</div>
-                                    <div class="totals-value" id="serenCount">0</div>
-                                </div>
+                        <div class="totals-container">
+                            <div class="totals-item">
+                                <div class="totals-emoji">💍</div>
+                                <div class="totals-label">LOTD</div>
+                                <div class="totals-value" id="lotdCount">0</div>
+                            </div>
+                            <div class="totals-item">
+                                <div class="totals-emoji">🔱</div>
+                                <div class="totals-label">HSR</div>
+                                <div class="totals-value" id="hazelmereCount">0</div>
+                            </div>
+                            <div class="totals-item">
+                                <div class="totals-emoji">✨</div>
+                                <div class="totals-label">BEAM</div>
+                                <div class="totals-value" id="feixeCount">0</div>
+                            </div>
+                            <div class="totals-item">
+                                <div class="totals-emoji">💎</div>
+                                <div class="totals-label">SEREN</div>
+                                <div class="totals-value" id="serenCount">0</div>
+                            </div>
+                            <div class="totals-item">
+                                <div class="totals-emoji">💡</div>
+                                <div class="totals-label">COMPS</div>
+                                <div class="totals-value" id="compsCount">0</div>
                             </div>
                         </div>
                     </div>

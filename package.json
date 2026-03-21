@@ -5,7 +5,7 @@
   "author": "RuhtraDev",
   "license": "MIT",
   "scripts": {
-    "build": "webpack",
+    "build": "webpack && copy src\\css\\style.css dist\\css\\style.css",
     "watch": "webpack --watch",
     "serve": "webpack serve",
     "deploy": "gh-pages -d dist"

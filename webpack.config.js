@@ -27,7 +27,9 @@ module.exports = {
         }),
         new CopyWebpackPlugin({
             patterns: [
-                { from: "css/style.css", to: "css/style.css" }
+                { from: "css/style.css", to: "css/style.css" },
+                { from: "icon.png", to: "icon.png" },           // ← ADICIONE O ÍCONE
+                { from: "background.png", to: "background.png" } // ← SE TIVER BACKGROUND
             ]
         })
     ],

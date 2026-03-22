@@ -300,15 +300,15 @@ function fixOcrText(text) {
     const corrections = [
         { wrong: "haif", correct: "half" },
         { wrong: "tooth haif", correct: "tooth half" },
-        { wrong: "loof", correct: "loop" },
-        { wrong: "haly", correct: "half" },
-        { wrong: "hailf", correct: "half" },
-        { wrong: "haff", correct: "half" },
-        { wrong: "tooth haif of a key", correct: "tooth half of a key" },
-        { wrong: "loof haif", correct: "loop half" },
-        { wrong: "loof half", correct: "loop half" },
-        { wrong: "tooth half", correct: "tooth half" },
-        { wrong: "loop half", correct: "loop half" }
+        { wrong: "Loof", correct: "Loop" },
+        /*  { wrong: "haly", correct: "half" },
+            { wrong: "hailf", correct: "half" },
+            { wrong: "haff", correct: "half" },
+            { wrong: "tooth haif of a key", correct: "tooth half of a key" },
+            { wrong: "loof haif", correct: "loop half" },
+            { wrong: "loof half", correct: "loop half" },
+            { wrong: "tooth half", correct: "tooth half" },
+            { wrong: "loop half", correct: "loop half" }*/
     ];
     for (let i = 0; i < corrections.length; i++) {
         let corr = corrections[i];
@@ -728,10 +728,10 @@ function showItems() {
         Object.keys(totals).sort().forEach(n => {
             let t = totals[n];
             let emoji = getEmojiByType(t.type);
-            let isRareComponent = RARE_COMPONENTS.indexOf(n) !== -1;
+            let isRareComponent = RARE_COMPONENTS.includes(n);
             let iconDisplay = "";
             let itemStyle = "";
-            if (currentFilter === "COMPS" && isRareComponent) {
+            if ((currentFilter === "COMPS" || currentFilter === "all") && isRareComponent) {
                 iconDisplay = "🔴";
                 itemStyle = ' style="color: #ff0000 !important; font-weight: bold !important;"';
             }

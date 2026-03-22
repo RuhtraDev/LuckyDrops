@@ -717,6 +717,7 @@ function showItems() {
         return "📦";
     }
     
+    
     if (mode === "total") {
         listHeader.innerHTML = "Drop Totals";
         listHeader.dataset.show = "history";

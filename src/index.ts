@@ -14,13 +14,40 @@ declare global {
 const APP_NAME = "LuckyDrops";
 const timestampRegex = /\[\d{2}:\d{2}:\d{2}\]/g;
 
-const RARE_COMPONENTS = [
-    "Brassican","Knightly","Dragonfire","Fungal","Explosive","Corporeal",
-    "Armadyl","Bandos","Saradomin","Seren","Zamorak","Zaros","Resilient","Silent","Noxious",
-    "Rumbling","Pestiferous","Third-age","Culinary","Shifting","Harnessed","Oceanic","Ascended",
-    "Undead","Avernic","Shadow","Ilujankan","Cywir","Faceted","Clockwork","Fortunate",
-    "Manufactured","Ecliptic"
+// ===== COMPONENT LISTS =====
+
+// Componentes Comuns (branco) - IGNORAR
+const COMMON_COMPONENTS = [
+    "Base", "Blade", "Clear", "Connector", "Cover", "Crafted", "Crystal", 
+    "Deflecting", "Delicate", "Flexible", "Head", "Magic", "Metallic", 
+    "Organic", "Padded", "Plated", "Simple", "Smooth", "Spiked", 
+    "Spiritual", "Stave", "Tensile"
 ];
+
+// Componentes Incomuns (laranja) - REGISTRAR
+const UNCOMMON_COMPONENTS = [
+    "Dextrous", "Direct", "Enhancing", "Ethereal", "Evasive", "Healthy", 
+    "Heavy", "Imbued", "Light", "Living", "Offcut", "Pious", "Powerful", 
+    "Precious", "Precise", "Protective", "Refined", "Sharp", "Strong", 
+    "Stunning", "Subtle", "Swift", "Variable"
+];
+
+// Componentes Raros (vermelho) - REGISTRAR
+const RARE_COMPONENTS = [
+    "Armadyl", "Ascended", "Avernic", "Bandos", "Brassican", "Clockwork", 
+    "Corporeal", "Culinary", "Cywir", "Dragonfire", "Ecliptic", "Explosive", 
+    "Faceted", "Fortunate", "Fungal", "Harnessed", "Ilujankan", "Knightly", 
+    "Manufactured", "Noxious", "Oceanic", "Pestiferous", "Resilient", 
+    "Rumbling", "Saradomin", "Seren", "Shadow", "Shifting", "Silent", 
+    "Third-age", "Undead", "Zamorak", "Zaros"
+];
+
+const ANCIENT_COMPONENTS =[
+    "Classic", "Historic","Timeworn","Vintage"
+
+];
+
+
 let currentFilter: string = "all"; // "all", "LOTD", "HSR", "BEAM", "SEREN", "COMPS"
 
 // ===== VISUAL DEBUG =====
@@ -74,7 +101,8 @@ reader.readargs = {
         a1lib.mixColor(0, 255, 255),    // Seren (cian)
         a1lib.mixColor(255, 165, 0),    // COMPONENTS (orange)
         a1lib.mixColor(255, 128, 0),    // COMPONENTS (orange blessing gods)
-        a1lib.mixColor(255, 0, 0)       // Vermelho (rare components)
+        a1lib.mixColor(255, 0, 0),       // Vermelho (rare components)
+        a1lib.mixColor(67, 188, 188)       // Vermelho (rare components)
     ]
 };
 
@@ -83,13 +111,19 @@ function updateCounters() {
     const data = getSaveData("data") || [];
     
     let lotd = 0, hsr = 0, beam = 0, seren = 0, comps = 0;
+    let ancient = 0, rare = 0, uncommon = 0;
     
     data.forEach((item: any) => {
         if (item.type === "LOTD") lotd++;
         else if (item.type.includes("HSR")) hsr++;
         else if (item.type === "BEAM") beam++;
         else if (item.type === "SEREN") seren++;
-        else if (item.type === "COMPS") comps++;
+        else if (item.type === "COMPS") {
+            comps++;
+            if (item.isAncient) ancient++;
+            else if (item.isRare) rare++;
+            else if (item.isUncommon) uncommon++;
+        }
     });
     
     const lotdEl = document.getElementById("lotdCount");
@@ -103,6 +137,15 @@ function updateCounters() {
     if (beamEl) beamEl.textContent = String(beam);
     if (serenEl) serenEl.textContent = String(seren);
     if (compsEl) compsEl.textContent = String(comps);
+    
+    // Se quiser exibir contadores separados para cada tipo de componente
+    const ancientEl = document.getElementById("ancientCount");
+    const rareCompEl = document.getElementById("rareCompCount");
+    const uncommonEl = document.getElementById("uncommonCount");
+    
+    if (ancientEl) ancientEl.textContent = String(ancient);
+    if (rareCompEl) rareCompEl.textContent = String(rare);
+    if (uncommonEl) uncommonEl.textContent = String(uncommon);
 }
 
 const dropsCache = new Map<string, { type: string, time: string, timestamp: number }>();
@@ -273,7 +316,7 @@ function fixOcrText(text: string): string {
     // Correções comuns
     const corrections = [
         { wrong: "haif", correct: "half" },
-        { wrong: "tooth haif", correct: "tooth half" },
+    /*  { wrong: "tooth haif", correct: "tooth half" },
         { wrong: "loof", correct: "loop" },
         { wrong: "haly", correct: "half" },
         { wrong: "hailf", correct: "half" },
@@ -282,7 +325,7 @@ function fixOcrText(text: string): string {
         { wrong: "loof haif", correct: "loop half" },
         { wrong: "loof half", correct: "loop half" },
         { wrong: "tooth half", correct: "tooth half" },
-        { wrong: "loop half", correct: "loop half" }
+        { wrong: "loop half", correct: "loop half" }*/
     ];
     
     for (let i = 0; i < corrections.length; i++) {
@@ -516,60 +559,177 @@ function readChatbox() {
         if (!salvo && (chatLine.includes("Materials gained:") || chatLine.includes("Scavenging perk adds:"))) {
             debug("💡 COMPONENTS detected");
             
-            let match = chatLine.match(/(?:Materials gained:|Your Scavenging perk adds:)\s*(\d+)\s*x\s*(.+)/i);
-            if (match) {
+            // Extrair o texto da mensagem sem o timestamp
+            let messageText = chatLine.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, '');
+            
+            // Remover o prefixo "Materials gained:" ou "Your Scavenging perk adds:"
+            messageText = messageText.replace(/(?:Materials gained:|Your Scavenging perk adds:)\s*/i, '');
+            
+            debug(`  → Texto original: "${messageText}"`);
+            
+            // CORREÇÃO MELHORADA: Primeiro, garantir que todos os componentes tenham o formato "X x Nome"
+            // Adicionar vírgula antes de padrões de componentes conhecidos que estão grudados
+            const allComponentNames = [
+                ...COMMON_COMPONENTS, ...UNCOMMON_COMPONENTS, ...RARE_COMPONENTS, ...ANCIENT_COMPONENTS
+            ];
+            
+            // Ordenar por tamanho decrescente para pegar nomes maiores primeiro
+            const sortedNames = [...allComponentNames].sort((a, b) => b.length - a.length);
+            
+            // Procurar por componentes grudados (sem vírgula)
+            for (let name of sortedNames) {
+                // Padrão: "X x ComponenteOutroComponente" - falta vírgula entre componentes
+                // Exemplo: "1 x Sharp components Timeworn components"
+                let regex = new RegExp(`(\\d+\\s*x\\s+${name}\\s+components?)\\s+(${sortedNames.join('|')})\\s+components?`, 'gi');
+                messageText = messageText.replace(regex, '$1, $2 components');
+            }
+            
+            // Garantir que cada componente tenha seu próprio "x"
+            // Separar por vírgula e processar cada parte
+            let componentsList: string[] = [];
+            
+            // Primeiro, tentar separar por vírgula
+            let parts = messageText.split(',');
+            
+            for (let part of parts) {
+                part = part.trim();
+                if (!part) continue;
+                
+                // Verificar se esta parte contém múltiplos componentes sem vírgula
+                // Exemplo: "2 x Vintage components 1 x Junk"
+                let multipleMatch = part.match(/(\d+\s*x\s*[^,]+?)\s+(?=\d+\s*x)/g);
+                if (multipleMatch && multipleMatch.length > 1) {
+                    // Se encontrou múltiplos, adicionar cada um separadamente
+                    for (let m of multipleMatch) {
+                        componentsList.push(m.trim());
+                    }
+                    // Pegar o resto
+                    let remaining = part;
+                    for (let m of multipleMatch) {
+                        remaining = remaining.replace(m, '');
+                    }
+                    if (remaining.trim()) {
+                        componentsList.push(remaining.trim());
+                    }
+                } else {
+                    componentsList.push(part);
+                }
+            }
+            
+            debug(`  → Componentes identificados: ${componentsList.length}`);
+            
+            for (let componentStr of componentsList) {
+                if (!componentStr) continue;
+                
+                // Limpar o componente string
+                componentStr = componentStr.trim();
+                
+                // Extrair quantidade e nome do componente
+                let match = componentStr.match(/(\d+)\s*x\s*(.+)/i);
+                if (!match) {
+                    // Tentar formato alternativo: "Vintage components" sem quantidade (assume 1)
+                    let altMatch = componentStr.match(/^([A-Za-z\s]+components?)$/i);
+                    if (altMatch && altMatch[1]) {
+                        match = [componentStr, "1", altMatch[1]];
+                        debug(`  → Quantidade assumida (1) para: "${altMatch[1]}"`);
+                    } else {
+                        debug(`  ⚠️ Não foi possível parsear: "${componentStr}"`);
+                        continue;
+                    }
+                }
+                
                 let qty = parseInt(match[1]);
                 let item = match[2].trim().replace(/[.!?]$/, '');
                 item = fixOcrText(item);
-                debug(`  → Quantity: ${qty}, Item: "${item}"`);
                 
-                if (isDuplicateDrop(item, chatLine, "COMPS")) {
-                    debug(`⏭️ Component duplicated: ${item}`);
-                    salvo = true;
-                } else {
-                    let displayName = item.replace(/\s+components?$/i, '');
-                    
-                    let isRareByColor = false;
-                    
-                    // Search in the reader's original segments
-                    if (reader.read() && reader.read().length > 0) {
-                        const segments = reader.read();
-                        for (let seg of segments) {
-                            if (seg.text && seg.text.includes(displayName) && seg.color) {
-                                const [r, g, b] = seg.color;
-
-                                if (r > 200 && g < 100 && b < 100) {
-                                    isRareByColor = true;
-                                    debug(`🔴 RED component detected by color: ${displayName} (rgb: ${r},${g},${b})`);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    
-                    //Fallback: if not detected by color, use the static list
-                    let isRare = isRareByColor || RARE_COMPONENTS.includes(displayName);
-                    
-                    let dropItem = {
-                        item: `${qty} x ${displayName}`,
-                        quantity: qty,
-                        name: displayName,
-                        type: "COMPS",
-                        isRare: isRare,
-                        time: new Date(),
-                        chatLine
-                    };
-                    
-                    updateSaveData({ data: dropItem });
-                    updateChatHistory(chatLine);
-                    showItems();
-                    sendDiscordNotification(dropItem);
-                    debug(`💾 COMPONENTS SAVE! ${qty} x ${item} -> ${displayName}${isRare ? ' 🔴 RARE!' : ''}`);
-                    salvo = true;
+                // Normalizar o nome
+                let normalizedName = item
+                    .replace(/\s+components?$/i, '')
+                    .replace(/\s+parts?$/i, '')
+                    .trim();
+                
+                debug(`  → Processando: ${qty} x "${item}" → normalizado: "${normalizedName}"`);
+                
+                // Verificar se é componente comum - IGNORAR
+                let isCommon = COMMON_COMPONENTS.some(common => 
+                    normalizedName.toLowerCase() === common.toLowerCase()
+                );
+                
+                if (isCommon) {
+                    debug(`  ⏭️ Componente COMUM ignorado: ${normalizedName}`);
+                    continue;
                 }
+                
+                // Verificar tipo de componente
+                let isAncient = ANCIENT_COMPONENTS.some(ancient => 
+                    normalizedName.toLowerCase() === ancient.toLowerCase()
+                );
+                
+                let isRare = RARE_COMPONENTS.some(rare => 
+                    normalizedName.toLowerCase() === rare.toLowerCase()
+                );
+                
+                let isUncommon = UNCOMMON_COMPONENTS.some(uncommon => 
+                    normalizedName.toLowerCase() === uncommon.toLowerCase()
+                );
+                
+                // Se não é nenhum tipo especial, ignorar
+                if (!isAncient && !isRare && !isUncommon) {
+                    debug(`  ⏭️ Componente não identificado ignorado: ${normalizedName}`);
+                    continue;
+                }
+                
+                // Determinar o tipo e ícone
+                let componentType = "";
+                let rarityName = "";
+                
+                if (isAncient) {
+                    componentType = "ancient";
+                    rarityName = "Antigo";
+                } else if (isRare) {
+                    componentType = "rare";
+                    rarityName = "Raro";
+                } else {
+                    componentType = "uncommon";
+                    rarityName = "Incomum";
+                }
+                
+                // Verificar duplicata
+                let componentKey = `${normalizedName}:${qty}`;
+                if (isDuplicateDrop(componentKey, chatLine, "COMPS")) {
+                    debug(`  ⏭️ Componente duplicado: ${normalizedName}`);
+                    continue;
+                }
+                
+                // Criar o item do drop
+                let dropItem = {
+                    item: `${qty} x ${normalizedName}`,
+                    quantity: qty,
+                    name: normalizedName,
+                    type: "COMPS",
+                    rarity: rarityName,
+                    componentType: componentType,
+                    isAncient: isAncient,
+                    isRare: isRare,
+                    isUncommon: isUncommon,
+                    time: new Date(),
+                    chatLine: chatLine
+                };
+                
+                // Salvar o componente
+                updateSaveData({ data: dropItem });
+                
+                let rarityIcon = isAncient ? "🔵" : isRare ? "🔴" : "🟠";
+                debug(`  💾 COMPONENTE SALVO! ${qty} x ${normalizedName} ${rarityIcon} ${rarityName}`);
+                
+                updateChatHistory(chatLine);
+                sendDiscordNotification(dropItem);
             }
+            
+            showItems();
+            salvo = true;
         }
-        
+                
         // ===== CUSTOM PHRASES =====
         if (!salvo) {
             let phrases = JSON.parse(localStorage.getItem(`${appName}_phrases`) || "null") || DEFAULT_PHRASES;
@@ -625,6 +785,7 @@ function readChatbox() {
         }
     }
 }
+
 function showItems() {
     if (!itemList) return;
     
@@ -708,15 +869,19 @@ function showItems() {
     }
     
     // Function to get emoji based on the item type
-    function getEmojiByType(type: string): string {
+    function getEmojiByType(type: string, rarity?: string): string {
         if (type === "LOTD") return "💍";
         if (type.includes("HSR")) return "🔱";
         if (type === "BEAM") return "✨";
         if (type === "SEREN") return "💎";
-        if (type === "COMPS") return "💡";
+        if (type === "COMPS") {
+            if (rarity === "Antigo") return "🔵";
+            if (rarity === "Raro") return "🔴";
+            if (rarity === "Incomum") return "🟠";
+            return "⚪";
+        }
         return "📦";
     }
-    
     
     if (mode === "total") {
         listHeader.innerHTML = "Drop Totals";
@@ -724,7 +889,20 @@ function showItems() {
         
         let totals: any = {};
         filteredData.forEach((item: any) => {
-            if (!totals[item.name]) totals[item.name] = { total:0, lotd:0, hsr:0, beam:0, seren:0, comps:0, type: item.type };
+            if (!totals[item.name]) {
+                totals[item.name] = { 
+                    total: 0, 
+                    lotd: 0, 
+                    hsr: 0, 
+                    beam: 0, 
+                    seren: 0, 
+                    comps: 0, 
+                    type: item.type,
+                    isAncient: item.isAncient || false,
+                    isRare: item.isRare || false,
+                    isUncommon: item.isUncommon || false
+                };
+            }
             totals[item.name].total += item.quantity;
             if (item.type === "LOTD") totals[item.name].lotd += item.quantity;
             else if (item.type.includes("HSR")) totals[item.name].hsr += item.quantity;
@@ -736,19 +914,41 @@ function showItems() {
         Object.keys(totals).sort().forEach(n => {
             let t = totals[n];
             
-            let emoji = getEmojiByType(t.type);
-            let isRareComponent = RARE_COMPONENTS.includes(n);
-            let iconDisplay = "";
+            let emoji = "";
             let itemStyle = "";
             
-           if ((currentFilter === "COMPS" || currentFilter === "all") && isRareComponent) {
-                iconDisplay = "🔴";
-                itemStyle = ' style="color: #ff0000 !important; font-weight: bold !important;"';
-            } else if (currentFilter === "COMPS" && !isRareComponent) {
-                iconDisplay = "💡";
+            if (currentFilter === "COMPS" || currentFilter === "all") {
+                if (t.isAncient) {
+                    emoji = "🔵";
+                    itemStyle = ' style="color: #43bcbc !important; font-weight: bold !important;"';
+                } else if (t.isRare) {
+                    emoji = "🔴";
+                    itemStyle = ' style="color: #ff0000 !important; font-weight: bold !important;"';
+                } else if (t.isUncommon) {
+                    emoji = "🟠";
+                    itemStyle = ' style="color: #ffa500 !important; font-weight: bold !important;"';
+                } else if (t.type === "COMPS") {
+                    emoji = "💡";
+                } else if (t.type === "LOTD") {
+                    emoji = "💍";
+                } else if (t.type.includes("HSR")) {
+                    emoji = "🔱";
+                } else if (t.type === "BEAM") {
+                    emoji = "✨";
+                } else if (t.type === "SEREN") {
+                    emoji = "💎";
+                } else {
+                    emoji = "📦";
+                }
             } else {
-                iconDisplay = emoji;
+                // Para outros filtros que não são COMPS
+                if (t.type === "LOTD") emoji = "💍";
+                else if (t.type.includes("HSR")) emoji = "🔱";
+                else if (t.type === "BEAM") emoji = "✨";
+                else if (t.type === "SEREN") emoji = "💎";
+                else emoji = "📦";
             }
+            
             let quantity = 0;
             if (currentFilter === "LOTD") quantity = t.lotd;
             else if (currentFilter === "HSR") quantity = t.hsr;
@@ -756,9 +956,17 @@ function showItems() {
             else if (currentFilter === "SEREN") quantity = t.seren;
             else if (currentFilter === "COMPS") quantity = t.comps;
             else quantity = t.total;
-                    
+            
             if (quantity > 0) {
-                let displayText = `${iconDisplay} ${n}: ${quantity}`;    
+                let displayText = `${emoji} ${n}: ${quantity}`;
+                let rarityTag = "";
+                if (t.type === "COMPS") {
+                    if (t.isAncient) rarityTag = " (Antigo)";
+                    else if (t.isRare) rarityTag = " (Raro)";
+                    else if (t.isUncommon) rarityTag = " (Incomum)";
+                }
+                displayText = `${emoji} ${n}: ${quantity}`;
+                
                 itemList.insertAdjacentHTML("beforeend",
                     `<li class="list-group-item item"${itemStyle}>${displayText}</li>`);
             }
@@ -771,38 +979,46 @@ function showItems() {
                     item.type.includes("HSR") ? "🔱" : 
                     item.type === "BEAM" ? "✨" : 
                     item.type === "SEREN" ? "💎" : 
-                    item.type === "COMPS" ? (item.isRare ? "🔴" : "💡") : "📦";
+                    item.type === "COMPS" ? (item.isAncient ? "🔵" : item.isRare ? "🔴" : item.isUncommon ? "🟠" : "💡") : "📦";
+            
             let itemStyle = "";
-            let itemText = item.item;
-            if (item.type === "COMPS" && item.isRare) {
-                itemStyle = ' style="color: #ff0000 !important; font-weight: bold !important;"';
-                debug(`🔴 Exibindo componente raro: ${item.name}`);
-            } else {
-                debug(`⚪ Componente comum: ${item.name} - isRare: ${item.isRare}`);
+            if (item.type === "COMPS") {
+                if (item.isAncient) {
+                    itemStyle = ' style="color: #43bcbc !important; font-weight: bold !important;"';
+                } else if (item.isRare) {
+                    itemStyle = ' style="color: #ff0000 !important; font-weight: bold !important;"';
+                } else if (item.isUncommon) {
+                    itemStyle = ' style="color: #ffa500 !important; font-weight: bold !important;"';
+                }
             }
+            
             let dataHora = new Date(item.time);
             let dataFormatada = dataHora.toLocaleDateString();
             let horaFormatada = dataHora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            let filterTag = "";
+            
             let displayText = "";
             if (currentFilter === "all") {
-                displayText = `${icon} ${itemText}`;
+                displayText = `${icon} ${item.item}`;
             } else {
-                displayText = `${icon} ${itemText} - 📅 ${dataFormatada} - 🕒 ${horaFormatada}`;
+                displayText = `${icon} ${item.item} - 📅 ${dataFormatada} - 🕒 ${horaFormatada}`;
             }
+            
             itemList.insertAdjacentHTML("beforeend",
-                `<li class="list-group-item item"${itemStyle} title="📅 ${dataFormatada} ${horaFormatada}${filterTag}">
+                `<li class="list-group-item item"${itemStyle} title="📅 ${dataFormatada} ${horaFormatada}">
                     ${displayText}
                 </li>`);
         });
     }
+    
     if (filteredData.length === 0 && data.length > 0) {
         itemList.insertAdjacentHTML("beforeend",
             `<li class="list-group-item item" style="text-align: center; color: #666;">✨ No drops for this filter ✨</li>`);
     }
+    
     updateCounters();
     updateFilteredCounters(filteredData);
 }
+
 
 // Function to update counters with filter 
 function updateFilteredCounters(filteredData: any[]) {
@@ -1036,11 +1252,19 @@ function sendDiscordNotification(dropItem: any) {
     const webhook = localStorage.getItem(`${appName}_webhook`);
     if (!webhook) return;
     
-    const emoji =  dropItem.type === "LOTD" ? "💍" : 
+    let emoji = dropItem.type === "LOTD" ? "💍" : 
         dropItem.type.includes("HSR") ? "🔱" : 
         dropItem.type === "BEAM" ? "✨" : 
         dropItem.type === "SEREN" ? "💎" : 
-        dropItem.type === "COMPS" ? "💡" : "📦";
+        dropItem.type === "COMPS" ? (dropItem.isAncient ? "🔵" : dropItem.isRare ? "🔴" : dropItem.isUncommon ? "🟠" : "⚪") : "📦";
+    
+    let rarityText = "";
+    if (dropItem.type === "COMPS") {
+        if (dropItem.isAncient) rarityText = " [Antigo]";
+        else if (dropItem.isRare) rarityText = " [Raro]";
+        else if (dropItem.isUncommon) rarityText = " [Incomum]";
+    }
+    
     const message = {
         username: "Lucky Drops Tracker",
         content: `${emoji} **${dropItem.type}** - ${dropItem.item} at ${new Date().toLocaleString()}`
@@ -1057,6 +1281,7 @@ function sendDiscordNotification(dropItem: any) {
     })
     .catch(err => debug(`❌ Discord error: ${err.message}`));
 }
+
 // ===== CUSTOM CONFIRM =====
 function showConfirmModal(message: string, onConfirm: () => void) {
     const oldModal = document.getElementById("customConfirmModal");

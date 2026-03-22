@@ -800,7 +800,7 @@ function showItems() {
     updateCounters();
     updateFilteredCounters(filteredData);
 }
-// Function to update counters with filter
+// Function to update counters with filter 
 function updateFilteredCounters(filteredData) {
     const totalFiltered = document.getElementById("totalFiltered");
     if (totalFiltered) {

@@ -1,6 +1,6 @@
 {
   "appName": "Lucky Drops",
-  "description": "Tracks Luck of the Dwarves and Hazelmere's Signet Ring drops",
+  "description": "Tracks drops from LOTD, HSR, Seren Spirit, and Components by Blessing God or Scavenging with real-time chat detection, Discord notifications, and exportable history.",
   "appUrl": "./index.html",
   "configUrl": "./appconfig.json",
   "iconUrl": "./icon.png",

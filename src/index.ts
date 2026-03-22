@@ -803,7 +803,7 @@ function showItems() {
     updateFilteredCounters(filteredData);
 }
 
-// Function to update counters with filter
+// Function to update counters with filter 
 function updateFilteredCounters(filteredData: any[]) {
     const totalFiltered = document.getElementById("totalFiltered");
     if (totalFiltered) {

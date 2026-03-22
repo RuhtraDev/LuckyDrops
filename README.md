@@ -191,7 +191,7 @@ Um rastreador completo de drops para RuneScape que detecta automaticamente drops
 | **Legenda de cores** | Laranja (LOTD), Dourado (HSR), Amarelo (Feixe), Ciano (Seren), Branco (Componentes) |
 | **Layout inteligente** | Cabeçalho fixo, lista rolável, design responsivo |
 
-### 🔧 Instalação
+### 🔧 Instalação 
 
 **Opção 1 - Link Direto Alt1:**
 `alt1://addapp/https://ruhtradev.github.io/LuckyDrops/appconfig.json`
